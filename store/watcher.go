@@ -7,4 +7,12 @@ const (
 	Set    = "set"
 	Get    = "get"
 	Delete = "delete"
+	Expire = "expire"
 )
+
+type watchEvent struct {
+	action Action
+}
+
+type watcherHub struct {
+}
