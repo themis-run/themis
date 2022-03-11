@@ -2,8 +2,6 @@ package store
 
 import (
 	"time"
-
-	"github.com/cornelk/hashmap"
 )
 
 type Store interface {
@@ -15,7 +13,7 @@ type Store interface {
 }
 
 type store struct {
-	kv hashmap.HashMap
+	kv KV
 }
 
 func (s *store) Set(key string, value []byte, expireTime time.Time) {
@@ -28,11 +26,11 @@ func (s *store) Get(key string) *Node {
 	if !ok {
 		return nil
 	}
-	return value.(*Node)
+	return value
 }
 
 func (s *store) Delete(key string) {
-	s.kv.Del(key)
+	s.kv.Delete(key)
 }
 
 func (s *store) Watch(key string, action Action) {
