@@ -12,6 +12,10 @@ type Store interface {
 	Watch(key string, action Opreation)
 }
 
+func NewStore(path string) {
+
+}
+
 type store struct {
 	kv      KV
 	log     Log

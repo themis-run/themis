@@ -14,7 +14,7 @@ const (
 
 type Log interface {
 	Append(*Event) error
-	Recover() []*Event
+	Recover() ([]*Event, error)
 	Flush()
 }
 
@@ -27,9 +27,33 @@ type log struct {
 	persistCh      chan struct{}
 
 	persisitTime   time.Duration
-	persisitTimer  time.Timer
+	persisitTimer  *time.Timer
 	writeFileTime  time.Duration
-	writeFileTimer time.Timer
+	writeFileTimer *time.Timer
+}
+
+func NewLog(path string) (Log, error) {
+	rw, err := NewReadWriter(path)
+	if err != nil {
+		return nil, err
+	}
+
+	l := &log{
+		decoder:        &decoder{},
+		encoder:        &encoder{},
+		readWriter:     rw,
+		sequenceNumber: rw.NextSequenceNumber(),
+		logCache:       make(chan []byte, 100),
+		persistCh:      make(chan struct{}),
+		persisitTime:   DefaultLogPersistTime,
+		writeFileTime:  DefaultLogWriteFileTime,
+	}
+
+	l.persisitTimer = time.NewTimer(l.persisitTime)
+	l.writeFileTimer = time.NewTimer(l.writeFileTime)
+
+	l.startLog()
+	return l, nil
 }
 
 func (l *log) Append(e *Event) error {
