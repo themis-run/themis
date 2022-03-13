@@ -16,7 +16,7 @@ const (
 	DefaultDataFileName  = ".data.log"  // 存放数据的文件名.
 	IndexHeaderSize      = 24
 	HeaderNumSize        = 8
-	DataNumberShift      = 16
+	DataFileNumberShift  = 16
 	OffsetShift          = 24
 	MaxIndexLogSize      = 4 * 1024 * 1024
 	MaxDataLogSize       = 4 * 1024 * 1024
@@ -59,7 +59,8 @@ func NewReadWriter(path string) (ReadWriter, error) {
 }
 
 type readWriterImpl struct {
-	indexNumber uint32
+	path            string
+	indexFileNumber uint16
 	*indexLogHeader
 	index *os.File
 	data  *os.File
@@ -67,31 +68,32 @@ type readWriterImpl struct {
 
 type indexLogHeader struct {
 	offset             uint32
-	dataNumber         uint32
+	dataFileNumber     uint16
 	baseSequenceNumber uint64
 	totalKeyNumber     uint64
 }
 
 func createReadWriter(path string) (ReadWriter, error) {
-	var indexNumber uint32 = 0
-	var dataNumber uint32 = 0
+	var indexFileNumber uint16 = 0
+	var dataFileNumber uint16 = 0
 
-	index, err := openLogFile(path, DefaultIndexFileName, indexNumber)
+	index, err := openLogFile(path, DefaultIndexFileName, indexFileNumber)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := openLogFile(path, DefaultDataFileName, dataNumber)
+	data, err := openLogFile(path, DefaultDataFileName, dataFileNumber)
 	if err != nil {
 		return nil, err
 	}
 
 	rw := &readWriterImpl{
-		indexNumber: indexNumber,
-		index:       index,
-		data:        data,
+		path:            path,
+		indexFileNumber: indexFileNumber,
+		index:           index,
+		data:            data,
 		indexLogHeader: &indexLogHeader{
-			dataNumber:         dataNumber,
+			dataFileNumber:     dataFileNumber,
 			offset:             0,
 			totalKeyNumber:     0,
 			baseSequenceNumber: 0,
@@ -107,9 +109,9 @@ func createReadWriter(path string) (ReadWriter, error) {
 
 func recoverReadWriter(path string) (ReadWriter, error) {
 	// TODO recover from snap
-	indexNumber := findIndexLog(path)
+	indexFileNumber := findIndexLog(path)
 
-	index, err := openLogFile(path, DefaultIndexFileName, indexNumber)
+	index, err := openLogFile(path, DefaultIndexFileName, indexFileNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -119,16 +121,17 @@ func recoverReadWriter(path string) (ReadWriter, error) {
 		return nil, err
 	}
 
-	data, err := openLogFile(path, DefaultDataFileName, indexHeader.dataNumber)
+	data, err := openLogFile(path, DefaultDataFileName, indexHeader.dataFileNumber)
 	if err != nil {
 		return nil, err
 	}
 
 	rw := &readWriterImpl{
-		indexNumber:    indexNumber,
-		indexLogHeader: indexHeader,
-		index:          index,
-		data:           data,
+		path:            path,
+		indexFileNumber: indexFileNumber,
+		indexLogHeader:  indexHeader,
+		index:           index,
+		data:            data,
 	}
 	return rw, nil
 }
@@ -140,42 +143,37 @@ func readLogHeader(f *os.File) (*indexLogHeader, error) {
 		return nil, err
 	}
 
-	//header := x[:IndexHeaderSize]
-	fmt.Println(header)
-
 	baseSequenceNumber := binary.BigEndian.Uint64(header[:8])
 	totalKeyNumber := binary.BigEndian.Uint64(header[8:16])
-	offsetNum := binary.BigEndian.Uint64(header[16:])
-	offsetNum = offsetNum >> OffsetShift
-	dataNumber := offsetNum >> OffsetShift
-	offset := offsetNum & (1<<(OffsetShift+1) - 1)
+
+	indexData := parseIndexData(header[16:])
 
 	return &indexLogHeader{
-		offset:             uint32(offset),
-		dataNumber:         uint32(dataNumber),
+		offset:             indexData.offset,
+		dataFileNumber:     indexData.dataFileNumber,
 		baseSequenceNumber: baseSequenceNumber,
 		totalKeyNumber:     totalKeyNumber,
 	}, nil
 }
 
-func findIndexLog(path string) uint32 {
-	var indexNumber uint32 = 0
+func findIndexLog(path string) uint16 {
+	var indexFileNumber uint16 = 0
 	for {
-		filename := filepath.Join(path, fmt.Sprintf("%s%d%s", DefaultLogName, indexNumber, DefaultIndexFileName))
+		filename := filepath.Join(path, fmt.Sprintf("%s%d%s", DefaultLogName, indexFileNumber, DefaultIndexFileName))
 		f, err := os.Stat(filename)
 		if errors.Is(err, os.ErrNotExist) {
-			return indexNumber
+			return indexFileNumber
 		}
 
 		if f.Size() < MaxIndexLogSize {
-			return indexNumber
+			return indexFileNumber
 		}
 
-		indexNumber++
+		indexFileNumber++
 	}
 }
 
-func openLogFile(path, suffix string, num uint32) (*os.File, error) {
+func openLogFile(path, suffix string, num uint16) (*os.File, error) {
 	filename := filepath.Join(path, fmt.Sprintf("%s%d%s", DefaultLogName, num, suffix))
 	return os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
 }
@@ -211,17 +209,8 @@ func (rw *readWriterImpl) NextSequenceNumber() uint64 {
 	return rw.baseSequenceNumber + rw.totalKeyNumber
 }
 
-func (rw *readWriterImpl) nextIndexNum(size int) uint64 {
-	var indexNum uint64
-
-	indexNum = indexNum | uint64(rw.dataNumber)
-	indexNum = indexNum << DataNumberShift
-
-	indexNum = indexNum | uint64(rw.offset)
-	indexNum = indexNum << OffsetShift
-
-	indexNum = indexNum | uint64(size)
-	return indexNum
+func (rw *readWriterImpl) nextIndexNumber(size int) uint64 {
+	return newIndexData(rw.dataFileNumber, rw.offset, uint32(size)).parseToIndexNumber()
 }
 
 func (rw *readWriterImpl) increTotalKeyNum() error {
@@ -241,13 +230,11 @@ func (rw *readWriterImpl) increTotalKeyNum() error {
 
 func (rw *readWriterImpl) growOffset(size int) error {
 	rw.offset += uint32(size)
-	offsetNumber := uint64(rw.dataNumber)
-	offsetNumber = offsetNumber << DataNumberShift
-	offsetNumber |= uint64(rw.offset)
-	offsetNumber = offsetNumber << OffsetShift
+
+	indexNumber := newIndexData(rw.dataFileNumber, rw.offset, 0).parseToIndexNumber()
 
 	offset := bytes.NewBuffer(make([]byte, 0, HeaderNumSize))
-	if err := binary.Write(offset, binary.BigEndian, offsetNumber); err != nil {
+	if err := binary.Write(offset, binary.BigEndian, indexNumber); err != nil {
 		return err
 	}
 
@@ -269,14 +256,13 @@ func (rw *readWriterImpl) appendData(f *os.File, data []byte) (int, error) {
 }
 
 func (rw *readWriterImpl) Write(sequenceNumber uint64, data []byte) (int, error) {
-	fmt.Println("sequenceNumber: ", sequenceNumber)
 	n, err := rw.appendData(rw.data, data)
 	if err != nil {
 		return 0, err
 	}
 
 	indexData := bytes.NewBuffer(make([]byte, 0, HeaderNumSize))
-	if err := binary.Write(indexData, binary.BigEndian, rw.nextIndexNum(n)); err != nil {
+	if err := binary.Write(indexData, binary.BigEndian, rw.nextIndexNumber(n)); err != nil {
 		return 0, err
 	}
 
@@ -296,12 +282,24 @@ func (rw *readWriterImpl) Write(sequenceNumber uint64, data []byte) (int, error)
 }
 
 func (rw *readWriterImpl) ListBefore(sequenceNumber uint64) ([][]byte, error) {
-	return nil, nil
-}
+	indexData, err := rw.findIndexDataBeforeSequenceNumber(sequenceNumber)
+	if err != nil {
+		return nil, err
+	}
 
-func (rw *readWriterImpl) findIndexLogBySequenceNumber(sequenceNumber uint64) int {
-	// todo many index log
-	return 0
+	res := make([][]byte, 0)
+
+	indexDataMap := rw.groupIndexDataByDataFileNumber(indexData)
+	for k, v := range indexDataMap {
+		dataBytesArray, err := rw.readDataByIndexData(k, v)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, dataBytesArray...)
+	}
+
+	return res, nil
 }
 
 func (rw *readWriterImpl) ListAfter(sequenceNumber uint64) ([][]byte, error) {
@@ -320,9 +318,9 @@ func (rw *readWriterImpl) Info() {
 	fmt.Println("          ", err)
 	fmt.Println(header)
 
-	fmt.Printf("index number : %d\n", rw.indexNumber)
+	fmt.Printf("index number : %d\n", rw.indexFileNumber)
 	fmt.Printf("index header :\noffset:%d\tdataNumber:%d\tbaseSequenceNumber:%d\ttotalKeyNumber:%d\n",
-		rw.offset, rw.dataNumber, rw.baseSequenceNumber, rw.totalKeyNumber)
+		rw.offset, rw.dataFileNumber, rw.baseSequenceNumber, rw.totalKeyNumber)
 
 	fmt.Println("------------DATA-----------")
 	d, _ := os.OpenFile(rw.data.Name(), os.O_RDWR|os.O_CREATE, os.ModePerm)
@@ -338,4 +336,129 @@ func (rw *readWriterImpl) Info() {
 }
 
 func (rw *readWriterImpl) Close() {
+}
+
+func (rw *readWriterImpl) readDataByIndexData(dataFileNumber uint16, indexDataArray []*indexData) ([][]byte, error) {
+	f, err := openLogFile(rw.path, DefaultDataFileName, dataFileNumber)
+	if err != nil {
+		return nil, err
+	}
+	res := make([][]byte, len(indexDataArray))
+
+	for i, v := range indexDataArray {
+		res[i] = make([]byte, v.size)
+		_, err := f.ReadAt(res[i], int64(v.offset))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
+}
+
+func (rw *readWriterImpl) groupIndexDataByDataFileNumber(data []*indexData) map[uint16][]*indexData {
+	indexDataMap := make(map[uint16][]*indexData)
+
+	for _, v := range data {
+		_, ok := indexDataMap[v.dataFileNumber]
+		if !ok {
+			indexDataArray := make([]*indexData, 0)
+			indexDataMap[v.dataFileNumber] = indexDataArray
+		}
+
+		indexDataMap[v.dataFileNumber] = append(indexDataMap[v.dataFileNumber], v)
+	}
+
+	return indexDataMap
+}
+
+func (rw *readWriterImpl) findIndexDataBeforeSequenceNumber(sequenceNumber uint64) ([]*indexData, error) {
+	if sequenceNumber > rw.baseSequenceNumber+rw.totalKeyNumber {
+		sequenceNumber = rw.baseSequenceNumber + rw.totalKeyNumber
+	}
+
+	indexDataLength := HeaderNumSize * (sequenceNumber - rw.baseSequenceNumber)
+	indexDataArray := make([]*indexData, 0)
+
+	indexDataArrayBytes := make([]byte, indexDataLength)
+	_, err := rw.index.ReadAt(indexDataArrayBytes, IndexHeaderSize)
+	if err != nil {
+		return nil, err
+	}
+
+	for offset := 0; offset < int(indexDataLength); offset += HeaderNumSize {
+		indexDataArray = append(indexDataArray, parseIndexData(indexDataArrayBytes[offset:offset+HeaderNumSize]))
+	}
+	return indexDataArray, nil
+
+}
+
+func (rw *readWriterImpl) findIndexDataBySequenceNumber(sequenceNumber uint64) (*indexData, error) {
+	if sequenceNumber > rw.baseSequenceNumber+rw.totalKeyNumber {
+		sequenceNumber = rw.baseSequenceNumber + rw.totalKeyNumber
+	}
+
+	indexDataOffset := IndexHeaderSize + HeaderNumSize*(sequenceNumber-rw.baseSequenceNumber)
+
+	indexDataBytes := make([]byte, HeaderNumSize)
+	_, err := rw.index.ReadAt(indexDataBytes, int64(indexDataOffset))
+	if err != nil {
+		return nil, err
+	}
+
+	return parseIndexData(indexDataBytes), nil
+}
+
+func (rw *readWriterImpl) findIndexLogBySequenceNumber(sequenceNumber uint64) int {
+	// todo many index log
+	return 0
+}
+
+type indexData struct {
+	dataFileNumber uint16
+	offset         uint32
+	size           uint32
+}
+
+func newIndexData(dataFileNumber uint16, offset, size uint32) *indexData {
+	return &indexData{
+		dataFileNumber: dataFileNumber,
+		offset:         offset,
+		size:           size,
+	}
+}
+
+func (d *indexData) parseToIndexNumber() uint64 {
+	var indexNumber uint64 = 0
+
+	indexNumber |= uint64(d.dataFileNumber)
+	indexNumber <<= OffsetShift
+
+	indexNumber |= uint64(d.offset)
+	indexNumber <<= OffsetShift
+
+	indexNumber |= uint64(d.size)
+
+	return indexNumber
+}
+
+func parseIndexData(data []byte) *indexData {
+	indexNum := binary.BigEndian.Uint64(data)
+	shiftNum := uint64(1<<OffsetShift - 1)
+
+	size := shiftNum & indexNum
+	indexNum = indexNum >> OffsetShift
+
+	offset := shiftNum & indexNum
+	indexNum = indexNum >> OffsetShift
+
+	dataFileNumber := indexNum
+
+	res := &indexData{
+		dataFileNumber: uint16(dataFileNumber),
+		offset:         uint32(offset),
+		size:           uint32(size),
+	}
+
+	return res
 }
