@@ -135,12 +135,8 @@ func recoverReadWriter(path string) (ReadWriter, error) {
 
 func readLogHeader(f *os.File) (*indexLogHeader, error) {
 	header := make([]byte, IndexHeaderSize)
-	n, err := f.Read(header)
+	_, err := f.Read(header)
 	if err != nil {
-		return nil, err
-	}
-
-	if n != IndexHeaderSize {
 		return nil, err
 	}
 
@@ -228,26 +224,22 @@ func (rw *readWriterImpl) nextIndexNum(size int) uint64 {
 	return indexNum
 }
 
-func (rw *readWriterImpl) increTotalKeyNum(index *os.File) error {
+func (rw *readWriterImpl) increTotalKeyNum() error {
 	rw.totalKeyNumber++
 	keyNum := bytes.NewBuffer(make([]byte, 0, HeaderNumSize))
 	if err := binary.Write(keyNum, binary.BigEndian, rw.totalKeyNumber); err != nil {
 		return err
 	}
 
-	n, err := index.WriteAt(keyNum.Bytes(), HeaderNumSize)
+	_, err := rw.index.WriteAt(keyNum.Bytes(), HeaderNumSize)
 	if err != nil {
 		return err
-	}
-
-	if n != keyNum.Len() {
-		return ErrorDataWrite
 	}
 
 	return nil
 }
 
-func (rw *readWriterImpl) growOffset(size int, index *os.File) error {
+func (rw *readWriterImpl) growOffset(size int) error {
 	rw.offset += uint32(size)
 	offsetNumber := uint64(rw.dataNumber)
 	offsetNumber = offsetNumber << DataNumberShift
@@ -259,29 +251,28 @@ func (rw *readWriterImpl) growOffset(size int, index *os.File) error {
 		return err
 	}
 
-	n, err := index.WriteAt(offset.Bytes(), HeaderNumSize*2)
+	_, err := rw.index.WriteAt(offset.Bytes(), HeaderNumSize*2)
 	if err != nil {
 		return err
-	}
-
-	if n != offset.Len() {
-		return ErrorDataWrite
 	}
 
 	return nil
 }
 
-func (rw *readWriterImpl) Write(sequenceNumber uint64, data []byte) (int, error) {
-	fmt.Println("sequenceNumber: ", sequenceNumber)
-
-	n, err := rw.data.Write(data)
+func (rw *readWriterImpl) appendData(f *os.File, data []byte) (int, error) {
+	n, err := f.Seek(0, os.SEEK_END)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(n)
 
-	if n != len(data) {
-		return 0, ErrorDataWrite
+	return f.WriteAt(data, n)
+}
+
+func (rw *readWriterImpl) Write(sequenceNumber uint64, data []byte) (int, error) {
+	fmt.Println("sequenceNumber: ", sequenceNumber)
+	n, err := rw.appendData(rw.data, data)
+	if err != nil {
+		return 0, err
 	}
 
 	indexData := bytes.NewBuffer(make([]byte, 0, HeaderNumSize))
@@ -289,13 +280,16 @@ func (rw *readWriterImpl) Write(sequenceNumber uint64, data []byte) (int, error)
 		return 0, err
 	}
 
-	rw.index.Write(indexData.Bytes())
-
-	if err := rw.growOffset(n, rw.index); err != nil {
+	_, err = rw.appendData(rw.index, indexData.Bytes())
+	if err != nil {
 		return 0, err
 	}
 
-	if err := rw.increTotalKeyNum(rw.index); err != nil {
+	if err := rw.growOffset(n); err != nil {
+		return 0, err
+	}
+
+	if err := rw.increTotalKeyNum(); err != nil {
 		return 0, err
 	}
 	return n, nil
