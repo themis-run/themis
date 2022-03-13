@@ -1,6 +1,6 @@
 package store
 
-type Action string
+type Opreation string
 
 const (
 	All    = "all"
@@ -10,8 +10,9 @@ const (
 	Expire = "expire"
 )
 
-type watchEvent struct {
-	action Action
+type Event struct {
+	Name    Opreation
+	OldNode *Node
 }
 
 type watcherHub struct {
