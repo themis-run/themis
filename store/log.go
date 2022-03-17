@@ -19,8 +19,7 @@ type Log interface {
 }
 
 type log struct {
-	*decoder
-	*encoder
+	Codec
 	readWriter     ReadWriter
 	sequenceNumber uint64
 	logCache       chan []byte
@@ -39,8 +38,6 @@ func NewLog(path string) (Log, error) {
 	}
 
 	l := &log{
-		decoder:        &decoder{},
-		encoder:        &encoder{},
 		readWriter:     rw,
 		sequenceNumber: rw.NextSequenceNumber(),
 		logCache:       make(chan []byte, 100),
@@ -61,7 +58,7 @@ func (l *log) Append(e *Event) error {
 		return nil
 	}
 
-	data, err := l.encode(e)
+	data, err := l.Encode(e)
 	if err != nil {
 		return err
 	}
@@ -78,7 +75,11 @@ func (l *log) Recover() ([]*Event, error) {
 
 	events := make([]*Event, 0)
 	for _, v := range data {
-		event := l.decode(v)
+		event, err := l.Decode(v)
+		if err != nil {
+			return nil, err
+		}
+
 		events = append(events, event)
 	}
 
