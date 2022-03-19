@@ -5,50 +5,44 @@ import (
 )
 
 type Store interface {
-	Set(key string, value []byte, expireTime time.Time)
+	Set(key string, value []byte, ttl time.Duration)
 	Get(key string) *Node
 	Delete(key string)
 
 	Watch(key string, action Opreation)
 }
 
-func NewStore(path string) {
+func NewStore(path string) Store {
 
+	return &store{}
 }
 
 type store struct {
-	kv      KV
-	log     Log
-	eventCh chan *Event
-	errorCh chan error
+	kv         KV
+	log        Log
+	watcherHub watcherHub
+	eventCh    chan *Event
+	errorCh    chan error
 }
 
-func (s *store) Set(key string, value []byte, expireTime time.Time) {
-	node := newNode(key, value, expireTime)
-	s.kv.Set(key, node)
-
-	event := &Event{
-		Name: Set,
-	}
-	s.eventCh <- event
+func (s *store) Set(key string, value []byte, ttl time.Duration) {
+	node := newNode(key, value, ttl)
+	s.eventCh <- s.kv.Set(key, node)
 }
 
 func (s *store) Get(key string) *Node {
-	value, ok := s.kv.Get(key)
+	event, ok := s.kv.Get(key)
 	if !ok {
 		return nil
 	}
 
-	event := &Event{
-		Name: Get,
-	}
 	s.eventCh <- event
 
-	return value
+	return event.Node
 }
 
 func (s *store) Delete(key string) {
-	s.kv.Delete(key)
+	s.eventCh <- s.kv.Delete(key)
 }
 
 func (s *store) listenEvent() {
@@ -59,6 +53,10 @@ func (s *store) listenEvent() {
 			if err := s.log.Append(event); err != nil {
 				s.errorCh <- err
 			}
+		}()
+
+		go func() {
+			s.watcherHub.notify(event)
 		}()
 	}
 }
