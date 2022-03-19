@@ -18,13 +18,16 @@ func NewStore(path string, size uint) (Store, error) {
 		return nil, err
 	}
 
-	return &store{
+	s := &store{
 		kv:         newKVStore(uintptr(size)),
 		log:        l,
 		watcherHub: *newWatcherHub(),
 		eventCh:    make(chan *Event, 100),
 		errorCh:    make(chan error, 5),
-	}, nil
+	}
+
+	s.listenEvent()
+	return s, nil
 }
 
 type store struct {
