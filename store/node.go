@@ -6,13 +6,15 @@ type Node struct {
 	Key   string
 	Value []byte
 
-	TTL time.Duration
+	CreateTime time.Time
+	TTL        time.Duration
 }
 
 func newNode(key string, value []byte, ttl time.Duration) *Node {
 	return &Node{
-		Key:   key,
-		Value: value,
-		TTL:   ttl,
+		Key:        key,
+		Value:      value,
+		CreateTime: time.Now(),
+		TTL:        ttl,
 	}
 }

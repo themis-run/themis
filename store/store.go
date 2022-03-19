@@ -12,9 +12,19 @@ type Store interface {
 	Watch(key string, action Opreation)
 }
 
-func NewStore(path string) Store {
+func NewStore(path string, size uint) (Store, error) {
+	l, err := NewLog(path)
+	if err != nil {
+		return nil, err
+	}
 
-	return &store{}
+	return &store{
+		kv:         newKVStore(uintptr(size)),
+		log:        l,
+		watcherHub: *newWatcherHub(),
+		eventCh:    make(chan *Event, 100),
+		errorCh:    make(chan error, 5),
+	}, nil
 }
 
 type store struct {

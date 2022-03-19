@@ -8,6 +8,12 @@ type KV interface {
 	Delete(string) *Event
 }
 
+func newKVStore(size uintptr) KV {
+	return &kvstore{
+		m: hashmap.New(size),
+	}
+}
+
 type kvstore struct {
 	m *hashmap.HashMap
 }
