@@ -6,13 +6,13 @@ type Node struct {
 	Key   string
 	Value []byte
 
-	ExpireTime time.Time
+	TTL time.Duration
 }
 
-func newNode(key string, value []byte, expireTime time.Time) *Node {
+func newNode(key string, value []byte, ttl time.Duration) *Node {
 	return &Node{
-		Key:        key,
-		Value:      value,
-		ExpireTime: expireTime,
+		Key:   key,
+		Value: value,
+		TTL:   ttl,
 	}
 }
