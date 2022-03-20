@@ -17,6 +17,15 @@ var (
 	defaultCodecName = "json"
 )
 
+func GetCodec(name string) Codec {
+	c, ok := codecMap[name]
+	if ok {
+		return c
+	}
+
+	return &codec{name: defaultCodecName}
+}
+
 func RegisterCodec(name string, codec Codec) {
 	lock.Lock()
 	defer lock.Unlock()
