@@ -25,10 +25,11 @@ func New(path string, size uint) (Store, error) {
 		log:        l,
 		watcherHub: newWatcherHub(),
 		ttlManager: newTTLManager(eventCh),
+		eventCh:    eventCh,
 		errorCh:    make(chan error, 5),
 	}
 
-	s.listenEvent()
+	go s.listenEvent()
 	return s, nil
 }
 
