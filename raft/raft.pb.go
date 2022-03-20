@@ -665,22 +665,22 @@ var file_raft_proto_rawDesc = []byte{
 	0x54, 0x65, 0x72, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x54, 0x65, 0x72, 0x6d,
 	0x12, 0x22, 0x0a, 0x04, 0x42, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e,
 	0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x52, 0x61, 0x66, 0x74, 0x42, 0x61, 0x73, 0x65, 0x52, 0x04,
-	0x42, 0x61, 0x73, 0x65, 0x32, 0xcd, 0x01, 0x0a, 0x0b, 0x52, 0x61, 0x66, 0x74, 0x53, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x12, 0x4b, 0x0a, 0x0f, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53,
-	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x1c, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x49,
-	0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x49, 0x6e, 0x73,
-	0x74, 0x61, 0x6c, 0x6c, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x70, 0x6c,
-	0x79, 0x12, 0x45, 0x0a, 0x0d, 0x41, 0x70, 0x70, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x69,
-	0x65, 0x73, 0x12, 0x1a, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x41, 0x70, 0x70, 0x65, 0x6e, 0x64,
-	0x45, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18,
-	0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x41, 0x70, 0x70, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x74, 0x72,
-	0x69, 0x65, 0x73, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x2a, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65,
-	0x12, 0x11, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52,
-	0x65, 0x70, 0x6c, 0x79, 0x42, 0x1b, 0x5a, 0x19, 0x67, 0x6f, 0x2e, 0x74, 0x68, 0x65, 0x6d, 0x69,
-	0x73, 0x2e, 0x72, 0x75, 0x6e, 0x2f, 0x74, 0x68, 0x65, 0x6d, 0x69, 0x73, 0x2f, 0x72, 0x61, 0x66,
-	0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x42, 0x61, 0x73, 0x65, 0x32, 0xc6, 0x01, 0x0a, 0x04, 0x52, 0x61, 0x66, 0x74, 0x12, 0x4b, 0x0a,
+	0x0f, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x12, 0x1c, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a,
+	0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x45, 0x0a, 0x0d, 0x41, 0x70,
+	0x70, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x12, 0x1a, 0x2e, 0x72, 0x61,
+	0x66, 0x74, 0x2e, 0x41, 0x70, 0x70, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x72, 0x61, 0x66, 0x74, 0x2e, 0x41,
+	0x70, 0x70, 0x65, 0x6e, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x52, 0x65, 0x70, 0x6c,
+	0x79, 0x12, 0x2a, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x11, 0x2e, 0x72, 0x61, 0x66, 0x74,
+	0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x72,
+	0x61, 0x66, 0x74, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x42, 0x1b, 0x5a,
+	0x19, 0x67, 0x6f, 0x2e, 0x74, 0x68, 0x65, 0x6d, 0x69, 0x73, 0x2e, 0x72, 0x75, 0x6e, 0x2f, 0x74,
+	0x68, 0x65, 0x6d, 0x69, 0x73, 0x2f, 0x72, 0x61, 0x66, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -714,12 +714,12 @@ var file_raft_proto_depIdxs = []int32{
 	0,  // 4: raft.AppendEntriesReply.Base:type_name -> raft.RaftBase
 	0,  // 5: raft.InstallSnapshotRequest.Base:type_name -> raft.RaftBase
 	0,  // 6: raft.InstallSnapshotReply.Base:type_name -> raft.RaftBase
-	6,  // 7: raft.RaftService.InstallSnapshot:input_type -> raft.InstallSnapshotRequest
-	4,  // 8: raft.RaftService.AppendEntries:input_type -> raft.AppendEntriesRequest
-	1,  // 9: raft.RaftService.Vote:input_type -> raft.VoteRequest
-	7,  // 10: raft.RaftService.InstallSnapshot:output_type -> raft.InstallSnapshotReply
-	5,  // 11: raft.RaftService.AppendEntries:output_type -> raft.AppendEntriesReply
-	2,  // 12: raft.RaftService.Vote:output_type -> raft.VoteReply
+	6,  // 7: raft.Raft.InstallSnapshot:input_type -> raft.InstallSnapshotRequest
+	4,  // 8: raft.Raft.AppendEntries:input_type -> raft.AppendEntriesRequest
+	1,  // 9: raft.Raft.Vote:input_type -> raft.VoteRequest
+	7,  // 10: raft.Raft.InstallSnapshot:output_type -> raft.InstallSnapshotReply
+	5,  // 11: raft.Raft.AppendEntries:output_type -> raft.AppendEntriesReply
+	2,  // 12: raft.Raft.Vote:output_type -> raft.VoteReply
 	10, // [10:13] is the sub-list for method output_type
 	7,  // [7:10] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -858,144 +858,144 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// RaftServiceClient is the client API for RaftService service.
+// RaftClient is the client API for Raft service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type RaftServiceClient interface {
+type RaftClient interface {
 	InstallSnapshot(ctx context.Context, in *InstallSnapshotRequest, opts ...grpc.CallOption) (*InstallSnapshotReply, error)
 	AppendEntries(ctx context.Context, in *AppendEntriesRequest, opts ...grpc.CallOption) (*AppendEntriesReply, error)
 	Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteReply, error)
 }
 
-type raftServiceClient struct {
+type raftClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewRaftServiceClient(cc grpc.ClientConnInterface) RaftServiceClient {
-	return &raftServiceClient{cc}
+func NewRaftClient(cc grpc.ClientConnInterface) RaftClient {
+	return &raftClient{cc}
 }
 
-func (c *raftServiceClient) InstallSnapshot(ctx context.Context, in *InstallSnapshotRequest, opts ...grpc.CallOption) (*InstallSnapshotReply, error) {
+func (c *raftClient) InstallSnapshot(ctx context.Context, in *InstallSnapshotRequest, opts ...grpc.CallOption) (*InstallSnapshotReply, error) {
 	out := new(InstallSnapshotReply)
-	err := c.cc.Invoke(ctx, "/raft.RaftService/InstallSnapshot", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raft.Raft/InstallSnapshot", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) AppendEntries(ctx context.Context, in *AppendEntriesRequest, opts ...grpc.CallOption) (*AppendEntriesReply, error) {
+func (c *raftClient) AppendEntries(ctx context.Context, in *AppendEntriesRequest, opts ...grpc.CallOption) (*AppendEntriesReply, error) {
 	out := new(AppendEntriesReply)
-	err := c.cc.Invoke(ctx, "/raft.RaftService/AppendEntries", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raft.Raft/AppendEntries", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *raftServiceClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteReply, error) {
+func (c *raftClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteReply, error) {
 	out := new(VoteReply)
-	err := c.cc.Invoke(ctx, "/raft.RaftService/Vote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raft.Raft/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// RaftServiceServer is the server API for RaftService service.
-type RaftServiceServer interface {
+// RaftServer is the server API for Raft service.
+type RaftServer interface {
 	InstallSnapshot(context.Context, *InstallSnapshotRequest) (*InstallSnapshotReply, error)
 	AppendEntries(context.Context, *AppendEntriesRequest) (*AppendEntriesReply, error)
 	Vote(context.Context, *VoteRequest) (*VoteReply, error)
 }
 
-// UnimplementedRaftServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedRaftServiceServer struct {
+// UnimplementedRaftServer can be embedded to have forward compatible implementations.
+type UnimplementedRaftServer struct {
 }
 
-func (*UnimplementedRaftServiceServer) InstallSnapshot(context.Context, *InstallSnapshotRequest) (*InstallSnapshotReply, error) {
+func (*UnimplementedRaftServer) InstallSnapshot(context.Context, *InstallSnapshotRequest) (*InstallSnapshotReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InstallSnapshot not implemented")
 }
-func (*UnimplementedRaftServiceServer) AppendEntries(context.Context, *AppendEntriesRequest) (*AppendEntriesReply, error) {
+func (*UnimplementedRaftServer) AppendEntries(context.Context, *AppendEntriesRequest) (*AppendEntriesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AppendEntries not implemented")
 }
-func (*UnimplementedRaftServiceServer) Vote(context.Context, *VoteRequest) (*VoteReply, error) {
+func (*UnimplementedRaftServer) Vote(context.Context, *VoteRequest) (*VoteReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
 
-func RegisterRaftServiceServer(s *grpc.Server, srv RaftServiceServer) {
-	s.RegisterService(&_RaftService_serviceDesc, srv)
+func RegisterRaftServer(s *grpc.Server, srv RaftServer) {
+	s.RegisterService(&_Raft_serviceDesc, srv)
 }
 
-func _RaftService_InstallSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Raft_InstallSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InstallSnapshotRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).InstallSnapshot(ctx, in)
+		return srv.(RaftServer).InstallSnapshot(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/raft.RaftService/InstallSnapshot",
+		FullMethod: "/raft.Raft/InstallSnapshot",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).InstallSnapshot(ctx, req.(*InstallSnapshotRequest))
+		return srv.(RaftServer).InstallSnapshot(ctx, req.(*InstallSnapshotRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_AppendEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Raft_AppendEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AppendEntriesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).AppendEntries(ctx, in)
+		return srv.(RaftServer).AppendEntries(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/raft.RaftService/AppendEntries",
+		FullMethod: "/raft.Raft/AppendEntries",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).AppendEntries(ctx, req.(*AppendEntriesRequest))
+		return srv.(RaftServer).AppendEntries(ctx, req.(*AppendEntriesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RaftService_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Raft_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VoteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RaftServiceServer).Vote(ctx, in)
+		return srv.(RaftServer).Vote(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/raft.RaftService/Vote",
+		FullMethod: "/raft.Raft/Vote",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RaftServiceServer).Vote(ctx, req.(*VoteRequest))
+		return srv.(RaftServer).Vote(ctx, req.(*VoteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _RaftService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "raft.RaftService",
-	HandlerType: (*RaftServiceServer)(nil),
+var _Raft_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "raft.Raft",
+	HandlerType: (*RaftServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "InstallSnapshot",
-			Handler:    _RaftService_InstallSnapshot_Handler,
+			Handler:    _Raft_InstallSnapshot_Handler,
 		},
 		{
 			MethodName: "AppendEntries",
-			Handler:    _RaftService_AppendEntries_Handler,
+			Handler:    _Raft_AppendEntries_Handler,
 		},
 		{
 			MethodName: "Vote",
-			Handler:    _RaftService_Vote_Handler,
+			Handler:    _Raft_Vote_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
