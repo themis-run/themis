@@ -18,11 +18,13 @@ func NewStore(path string, size uint) (Store, error) {
 		return nil, err
 	}
 
+	eventCh := make(chan *Event, 100)
+
 	s := &store{
 		kv:         newKVStore(uintptr(size)),
 		log:        l,
-		watcherHub: *newWatcherHub(),
-		eventCh:    make(chan *Event, 100),
+		watcherHub: newWatcherHub(),
+		ttlManager: newTTLManager(eventCh),
 		errorCh:    make(chan error, 5),
 	}
 
@@ -33,14 +35,23 @@ func NewStore(path string, size uint) (Store, error) {
 type store struct {
 	kv         KV
 	log        Log
-	watcherHub watcherHub
+	watcherHub *watcherHub
+	ttlManager *ttlManager
 	eventCh    chan *Event
 	errorCh    chan error
 }
 
 func (s *store) Set(key string, value []byte, ttl time.Duration) {
 	node := newNode(key, value, ttl)
-	s.eventCh <- s.kv.Set(key, node)
+	event := s.kv.Set(key, node)
+
+	if event.OldNode != nil {
+		s.ttlManager.update(event.OldNode, event.Node)
+	} else {
+		s.ttlManager.push(event.Node)
+	}
+
+	s.eventCh <- event
 }
 
 func (s *store) Get(key string) *Node {
@@ -55,7 +66,10 @@ func (s *store) Get(key string) *Node {
 }
 
 func (s *store) Delete(key string) {
-	s.eventCh <- s.kv.Delete(key)
+	event := s.kv.Delete(key)
+
+	s.ttlManager.remove(event.Node)
+	s.eventCh <- event
 }
 
 func (s *store) listenEvent() {
