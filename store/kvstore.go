@@ -35,22 +35,27 @@ func (kv *kvstore) Set(key string, value *Node) *Event {
 
 func (kv *kvstore) Get(key string) (*Event, bool) {
 	v, ok := kv.m.Get(key)
+	n := v.(*Node)
+	if n.Expired || n.IsExpire() {
+		return nil, false
+	}
+
 	return &Event{
 		Name: Get,
-		Node: v.(*Node),
+		Node: n,
 	}, ok
 }
 
 func (kv *kvstore) Delete(key string) *Event {
 	event := &Event{
-		Name: Set,
+		Name: Delete,
 	}
 
 	v, ok := kv.m.Get(key)
 	if ok {
 		event.OldNode = v.(*Node)
+		kv.m.Del(key)
 	}
-	kv.m.Del(key)
 
 	return event
 }
