@@ -70,14 +70,6 @@ func (h *ttlKeyHeap) push(x interface{}) {
 	heap.Push(h, x)
 }
 
-func (h *ttlKeyHeap) update(n *Node) {
-	index, ok := h.indexMap[n]
-	if ok {
-		heap.Remove(h, index)
-		heap.Push(h, n)
-	}
-}
-
 func (h *ttlKeyHeap) remove(n *Node) {
 	index, ok := h.indexMap[n]
 	if ok {

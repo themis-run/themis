@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -40,31 +39,6 @@ func TestTTLKeyRemoveNode(t *testing.T) {
 			t.Fail()
 		}
 	}
-}
-
-func TestTTLKeyUpdateNode(t *testing.T) {
-	h := newTTLKeyHeap()
-
-	nodes := createTTLKeyNode()
-	for _, v := range nodes {
-		h.push(v)
-	}
-
-	nodes[1].UpdateTTL(5 * time.Second)
-	h.update(nodes[1])
-
-	ans := createUpateAns()
-	length := h.Len()
-	for i := 0; i < length; i++ {
-		if nodes[ans[i]] != h.pop() {
-			fmt.Println(i)
-			t.Fail()
-		}
-	}
-}
-
-func createUpateAns() []int {
-	return []int{3, 0, 2, 1}
 }
 
 func createRemovedAns() []int {
