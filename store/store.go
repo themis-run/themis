@@ -5,50 +5,72 @@ import (
 )
 
 type Store interface {
-	Set(key string, value []byte, expireTime time.Time)
+	Set(key string, value []byte, ttl time.Duration)
 	Get(key string) *Node
 	Delete(key string)
 
 	Watch(key string, action Opreation)
 }
 
-func NewStore(path string) {
+func New(path string, size uint) (Store, error) {
+	l, err := NewLog(path)
+	if err != nil {
+		return nil, err
+	}
 
+	eventCh := make(chan *Event, 100)
+
+	s := &store{
+		kv:         newKVStore(uintptr(size)),
+		log:        l,
+		watcherHub: newWatcherHub(),
+		ttlManager: newTTLManager(eventCh),
+		eventCh:    eventCh,
+		errorCh:    make(chan error, 5),
+	}
+
+	go s.listenEvent()
+	return s, nil
 }
 
 type store struct {
-	kv      KV
-	log     Log
-	eventCh chan *Event
-	errorCh chan error
+	kv         KV
+	log        Log
+	watcherHub *watcherHub
+	ttlManager *ttlManager
+	eventCh    chan *Event
+	errorCh    chan error
 }
 
-func (s *store) Set(key string, value []byte, expireTime time.Time) {
-	node := newNode(key, value, expireTime)
-	s.kv.Set(key, node)
+func (s *store) Set(key string, value []byte, ttl time.Duration) {
+	node := newNode(key, value, ttl)
+	event := s.kv.Set(key, node)
 
-	event := &Event{
-		Name: Set,
+	if event.OldNode != nil {
+		s.ttlManager.update(event.OldNode, event.Node)
+	} else {
+		s.ttlManager.push(event.Node)
 	}
+
 	s.eventCh <- event
 }
 
 func (s *store) Get(key string) *Node {
-	value, ok := s.kv.Get(key)
+	event, ok := s.kv.Get(key)
 	if !ok {
 		return nil
 	}
 
-	event := &Event{
-		Name: Get,
-	}
 	s.eventCh <- event
 
-	return value
+	return event.Node
 }
 
 func (s *store) Delete(key string) {
-	s.kv.Delete(key)
+	event := s.kv.Delete(key)
+
+	s.ttlManager.remove(event.Node)
+	s.eventCh <- event
 }
 
 func (s *store) listenEvent() {
@@ -59,6 +81,10 @@ func (s *store) listenEvent() {
 			if err := s.log.Append(event); err != nil {
 				s.errorCh <- err
 			}
+		}()
+
+		go func() {
+			s.watcherHub.notify(event)
 		}()
 	}
 }
