@@ -12,7 +12,7 @@ type Store interface {
 	Watch(key string, action Opreation)
 }
 
-func NewStore(path string, size uint) (Store, error) {
+func New(path string, size uint) (Store, error) {
 	l, err := NewLog(path)
 	if err != nil {
 		return nil, err
