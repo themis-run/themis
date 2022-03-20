@@ -38,6 +38,7 @@ func NewLog(path string) (Log, error) {
 	}
 
 	l := &log{
+		Codec:          GetCodec(defaultCodecName),
 		readWriter:     rw,
 		sequenceNumber: rw.NextSequenceNumber(),
 		logCache:       make(chan []byte, 100),
@@ -49,7 +50,7 @@ func NewLog(path string) (Log, error) {
 	l.persisitTimer = time.NewTimer(l.persisitTime)
 	l.writeFileTimer = time.NewTimer(l.writeFileTime)
 
-	l.startLog()
+	go l.startLog()
 	return l, nil
 }
 
