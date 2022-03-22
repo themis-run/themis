@@ -30,7 +30,7 @@ message LogEntry{
 
 message AppendEntriesRequest{
     int32 Term = 1;
-    int32 LeaderID = 2;
+    string LeaderName = 2;
     int32 PrevLogIndex = 3;
     int32 PrevLogTerm = 4;
     repeated LogEntry Entries = 5;
