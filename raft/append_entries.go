@@ -2,6 +2,7 @@ package raft
 
 import (
 	context "context"
+	"time"
 )
 
 func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (reply *AppendEntriesReply, err error) {
@@ -82,16 +83,7 @@ func (rf *Raft) getNextIndex() int32 {
 
 func (rf *Raft) appendEntries() {
 	for name := range rf.peers {
-		go func(name string) {
-			for {
-				select {
-				case <-rf.stopCh:
-					rf.Kill()
-				case <-rf.appendEntriesTimers[name].C:
-
-				}
-			}
-		}(name)
+		go rf.appendEntriesToPeer(name)
 	}
 }
 
@@ -121,6 +113,8 @@ func (rf *Raft) sendAppendEntriesRPCToPeer(name string) {
 
 		reply := &AppendEntriesReply{}
 		if err := rf.doAppendLogsToPeer(name, req, reply); err != nil {
+			// log
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 
@@ -198,9 +192,6 @@ func (rf *Raft) doAppendLogsToPeer(name string, req *AppendEntriesRequest, resp 
 	defer cancel()
 
 	resp, err = rf.peers[name].AppendEntries(ctx, req)
-	if err != nil {
-		//log
-	}
 	return err
 }
 
