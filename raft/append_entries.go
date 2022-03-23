@@ -81,12 +81,6 @@ func (rf *Raft) getNextIndex() int32 {
 	return idx + 1
 }
 
-func (rf *Raft) appendEntries() {
-	for name := range rf.peers {
-		go rf.appendEntriesToPeer(name)
-	}
-}
-
 func (rf *Raft) appendEntriesToPeer(name string) {
 	for {
 		select {
