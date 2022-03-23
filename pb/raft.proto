@@ -47,7 +47,7 @@ message AppendEntriesReply{
 
 message InstallSnapshotRequest{
     int32 Term = 1;
-    int32 LeaderName = 2;
+    string LeaderName = 2;
     int32 LastIncludedIndex = 3;
     int32 LastIncludedTerm = 4;
     bytes Data = 5;
