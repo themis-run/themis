@@ -15,11 +15,10 @@ func init() {
 }
 
 const (
-	ElectionTimeout  = time.Millisecond * 300 // 选举
-	HeartBeatTimeout = time.Millisecond * 150 // leader 发送心跳
-	ApplyInterval    = time.Millisecond * 100 // apply log
+	ElectionTimeout  = time.Millisecond * 300
+	HeartBeatTimeout = time.Millisecond * 150
+	ApplyInterval    = time.Millisecond * 100
 	RPCTimeout       = time.Millisecond * 100
-	MaxLockTime      = time.Millisecond * 10
 )
 
 type Role int
@@ -47,7 +46,7 @@ type Raft struct {
 	term int32
 
 	electionTimer       *time.Timer
-	appendEntriesTimers []*time.Timer
+	appendEntriesTimers map[string]*time.Timer
 	applyTimer          *time.Timer
 	notifyApplyCh       chan struct{}
 	stopCh              chan struct{}
@@ -161,15 +160,19 @@ func (rf *Raft) resetElectionTimer() {
 }
 
 func (rf *Raft) resetHeartBeatTimers() {
-	for i, _ := range rf.appendEntriesTimers {
-		rf.appendEntriesTimers[i].Stop()
-		rf.appendEntriesTimers[i].Reset(0)
+	for name := range rf.appendEntriesTimers {
+		rf.appendEntriesTimers[name].Stop()
+		rf.appendEntriesTimers[name].Reset(0)
 	}
+}
+
+func (rf *Raft) resetHeartBeatTimer(name string) {
+	rf.appendEntriesTimers[name].Stop()
+	rf.appendEntriesTimers[name].Reset(0)
 }
 
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
-	// Your code here, if desired.
 	close(rf.stopCh)
 }
 
@@ -249,4 +252,64 @@ func (rf *Raft) getRealIdxByLogIndex(logIndex int32) int32 {
 	} else {
 		return idx
 	}
+}
+
+func (rf *Raft) listenApplyMsg() {
+	for {
+		select {
+		case <-rf.stopCh:
+			return
+		case <-rf.applyTimer.C:
+			rf.notifyApplyCh <- struct{}{}
+		case <-rf.notifyApplyCh:
+			rf.startApplyLogs()
+		}
+	}
+}
+
+func (rf *Raft) listenElection() {
+	for {
+		select {
+		case <-rf.stopCh:
+			return
+		case <-rf.electionTimer.C:
+			rf.startElection()
+		}
+	}
+}
+
+func (rf *Raft) Serve() {
+	for name := range rf.peers {
+		go rf.appendEntriesToPeer(name)
+	}
+}
+
+func New(peers map[string]RaftClient, me string, persister *Persister, applyCh chan ApplyMsg) *Raft {
+	rf := &Raft{}
+	rf.peers = peers
+	rf.persister = persister
+	rf.me = me
+	rf.applyCh = applyCh
+
+	rf.stopCh = make(chan struct{})
+	rf.term = 0
+	rf.voteFor = ""
+	rf.role = Follower
+	rf.logEntries = make([]*LogEntry, 1)
+	rf.readPersist(persister.ReadRaftState())
+
+	rf.electionTimer = time.NewTimer(randElectionTimeout())
+	rf.appendEntriesTimers = make(map[string]*time.Timer)
+	for k := range rf.peers {
+		rf.appendEntriesTimers[k] = time.NewTimer(HeartBeatTimeout)
+	}
+	rf.applyTimer = time.NewTimer(ApplyInterval)
+	rf.notifyApplyCh = make(chan struct{}, 100)
+
+	go rf.listenApplyMsg()
+
+	go rf.listenElection()
+
+	rf.Serve()
+	return rf
 }
