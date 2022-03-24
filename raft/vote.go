@@ -3,30 +3,38 @@ package raft
 import (
 	"context"
 	"errors"
+	"time"
+
+	"go.themis.run/themis/logging"
 )
 
 var ErrorVote = errors.New("vote error")
 
-func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (*VoteReply, error) {
-	reply := &VoteReply{}
+func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, err error) {
+	reply = &VoteReply{}
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
 	lastLogTerm, lastLogIndex := rf.lastLogTermIndex()
 	reply.Term = int32(rf.term)
 	reply.VoteGranted = false
+	reply.Base = &RaftBase{
+		From: req.Base.To,
+		To:   req.Base.From,
+	}
+	logging.Info(req)
 
 	if req.Term < rf.term {
-		return reply, nil
+		return
 	} else if req.Term == rf.term {
 		if rf.role == Leader {
-			return reply, nil
+			return
 		}
 		if rf.voteFor == req.CandidateName {
 			reply.VoteGranted = true
 		}
 		if rf.voteFor != "" && rf.voteFor != req.CandidateName {
-			return reply, nil
+			return
 		}
 	}
 
@@ -48,7 +56,8 @@ func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (*VoteReply, error) 
 	reply.VoteGranted = true
 	rf.changeRole(Follower)
 	rf.resetElectionTimer()
-	return nil, ErrorVote
+	logging.Infof("%s vote to %s\n", rf.me, req.CandidateName)
+	return
 }
 
 func (rf *Raft) startElection() {
@@ -75,13 +84,23 @@ func (rf *Raft) startElection() {
 	ticketsCh := make(chan bool, len(rf.peers))
 	for name := range rf.peers {
 		go func(ch chan bool, name string) {
+			req.Base = &RaftBase{
+				From: rf.me,
+				To:   name,
+			}
+
 			ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 			defer cancel()
-
+			t := time.Now()
 			resp, err := rf.peers[name].Vote(ctx, req)
 			if err != nil {
+				logging.Debug(time.Now().Sub(t))
+				logging.Debugf("from %s -> to %s \t", rf.me, name)
+				logging.Debug(err)
 				// log
+				return
 			}
+			logging.Debug(time.Now().Sub(t))
 
 			ticketsCh <- resp.VoteGranted
 			if resp.Term > req.Term {

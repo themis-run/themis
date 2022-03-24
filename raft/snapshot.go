@@ -6,6 +6,7 @@ import (
 )
 
 func (rf *Raft) InstallSnapshot(ctx context.Context, req *InstallSnapshotRequest) (reply *InstallSnapshotReply, err error) {
+	reply = &InstallSnapshotReply{}
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
