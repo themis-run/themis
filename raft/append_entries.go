@@ -6,6 +6,7 @@ import (
 )
 
 func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (reply *AppendEntriesReply, err error) {
+	reply = &AppendEntriesReply{}
 	rf.mu.Lock()
 
 	reply.Term = rf.term
