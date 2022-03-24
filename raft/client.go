@@ -2,6 +2,7 @@ package raft
 
 import (
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func newClient(address string) (RaftClient, error) {
@@ -17,7 +18,7 @@ func newClient(address string) (RaftClient, error) {
 		  }
 		}]}`
 
-	conn, err := grpc.Dial(address, grpc.WithDefaultServiceConfig(retryPolicy))
+	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultServiceConfig(retryPolicy))
 	if err != nil {
 		return nil, err
 	}
