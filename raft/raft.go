@@ -15,10 +15,10 @@ func init() {
 }
 
 const (
-	ElectionTimeout  = time.Millisecond * 300
-	HeartBeatTimeout = time.Millisecond * 150
-	ApplyInterval    = time.Millisecond * 100
-	RPCTimeout       = time.Millisecond * 100
+	ElectionTimeout  = time.Millisecond * 300 * 2
+	HeartBeatTimeout = time.Millisecond * 150 * 2
+	ApplyInterval    = time.Millisecond * 100 * 2
+	RPCTimeout       = time.Millisecond * 100 * 2
 )
 
 type Role int
@@ -74,6 +74,23 @@ type raftState struct {
 	LogEntries        []*LogEntry
 }
 
+func (rf *Raft) getRaftBootstrapState() *raftState {
+	return &raftState{
+		Term:              0,
+		VoteFor:           "",
+		CommitIndex:       0,
+		LastSnapshotIndex: 0,
+		LastSnapshotTerm:  0,
+		LogEntries: []*LogEntry{
+			{
+				Term:    0,
+				Index:   0,
+				Command: nil,
+			},
+		},
+	}
+}
+
 func (rf *Raft) getRaftState() *raftState {
 	return &raftState{
 		Term:              rf.term,
@@ -91,7 +108,14 @@ func (rf *Raft) loadRaftState(r *raftState) {
 	rf.commitIndex = r.CommitIndex
 	rf.lastSnapshotIndex = r.LastSnapshotIndex
 	rf.lastSnapshotTerm = r.LastSnapshotTerm
-	rf.logEntries = r.LogEntries
+	if r.LogEntries != nil {
+		rf.logEntries = r.LogEntries
+	}
+	rf.logEntries = []*LogEntry{{
+		Term:    0,
+		Index:   0,
+		Command: nil,
+	}}
 }
 
 func (rf *Raft) getPersistData() ([]byte, error) {
@@ -109,6 +133,7 @@ func (rf *Raft) persist() {
 
 func (rf *Raft) readPersist(data []byte) {
 	if data == nil || len(data) < 1 {
+		rf.loadRaftState(rf.getRaftBootstrapState())
 		return
 	}
 
@@ -181,7 +206,7 @@ func (rf *Raft) killed() bool {
 	return z == 1
 }
 
-func (rf *Raft) Start(command []byte) (int32, int32, bool) {
+func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 	// Your code here (2B).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -278,25 +303,14 @@ func (rf *Raft) listenElection() {
 	}
 }
 
-func (rf *Raft) Serve() {
+func (rf *Raft) appendEntries() {
 	for name := range rf.peers {
 		go rf.appendEntriesToPeer(name)
 	}
 }
 
-func New(peers map[string]RaftClient, me string, persister *Persister, applyCh chan ApplyMsg) *Raft {
-	rf := &Raft{}
+func (rf *Raft) Start(peers map[string]RaftClient) {
 	rf.peers = peers
-	rf.persister = persister
-	rf.me = me
-	rf.applyCh = applyCh
-
-	rf.stopCh = make(chan struct{})
-	rf.term = 0
-	rf.voteFor = ""
-	rf.role = Follower
-	rf.logEntries = make([]*LogEntry, 1)
-	rf.readPersist(persister.ReadRaftState())
 
 	rf.electionTimer = time.NewTimer(randElectionTimeout())
 	rf.appendEntriesTimers = make(map[string]*time.Timer)
@@ -310,6 +324,22 @@ func New(peers map[string]RaftClient, me string, persister *Persister, applyCh c
 
 	go rf.listenElection()
 
-	rf.Serve()
+	rf.appendEntries()
+}
+
+func NewRaft(me string, persister *Persister, applyCh chan ApplyMsg) *Raft {
+	rf := &Raft{}
+	rf.persister = persister
+	rf.me = me
+	rf.applyCh = applyCh
+	rf.coder = codec.Get(codec.Gob)
+
+	rf.stopCh = make(chan struct{})
+	rf.term = 0
+	rf.voteFor = ""
+	rf.role = Follower
+	rf.logEntries = make([]*LogEntry, 1)
+	rf.readPersist(persister.ReadRaftState())
+
 	return rf
 }
