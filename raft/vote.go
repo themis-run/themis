@@ -2,13 +2,10 @@ package raft
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"go.themis.run/themis/logging"
 )
-
-var ErrorVote = errors.New("vote error")
 
 func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, err error) {
 	reply = &VoteReply{}
@@ -22,7 +19,6 @@ func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, e
 		From: req.Base.To,
 		To:   req.Base.From,
 	}
-	logging.Info(req)
 
 	if req.Term < rf.term {
 		return
@@ -47,7 +43,7 @@ func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, e
 	}
 
 	if lastLogTerm > req.LastLogTerm || (req.LastLogTerm == lastLogTerm && req.LastLogIndex < int32(lastLogIndex)) {
-		// 选取限制
+		// log term and index are not up to date
 		return reply, nil
 	}
 
@@ -56,7 +52,7 @@ func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, e
 	reply.VoteGranted = true
 	rf.changeRole(Follower)
 	rf.resetElectionTimer()
-	logging.Infof("%s vote to %s\n", rf.me, req.CandidateName)
+	logging.Debugf("%s vote to %s\n", rf.me, req.CandidateName)
 	return
 }
 
@@ -91,16 +87,15 @@ func (rf *Raft) startElection() {
 
 			ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 			defer cancel()
+
 			t := time.Now()
 			resp, err := rf.peers[name].Vote(ctx, req)
+			logging.Debugf("%s -> %s vote request time: %d ms\n", rf.me, name, time.Now().Sub(t)/time.Millisecond)
 			if err != nil {
-				logging.Debug(time.Now().Sub(t))
-				logging.Debugf("from %s -> to %s \t", rf.me, name)
+				logging.Debugf("%s -> %s error: ", rf.me, name)
 				logging.Debug(err)
-				// log
 				return
 			}
-			logging.Debug(time.Now().Sub(t))
 
 			ticketsCh <- resp.VoteGranted
 			if resp.Term > req.Term {
@@ -128,7 +123,7 @@ func (rf *Raft) startElection() {
 	}
 
 	if grantedCount <= len(rf.peers)/2 {
-		// election fail
+		logging.Debugf("%s elect fail. get tickets num: %d\n", rf.me, grantedCount)
 		return
 	}
 
