@@ -15,13 +15,6 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-const (
-	ElectionTimeout  = time.Millisecond * 900
-	HeartBeatTimeout = time.Millisecond * 450
-	ApplyInterval    = time.Millisecond * 300
-	RPCTimeout       = time.Millisecond * 300
-)
-
 type Role string
 
 const (
@@ -46,6 +39,11 @@ type Raft struct {
 	role Role
 	term int32
 
+	electionTimeout  time.Duration
+	heartbeatTimeout time.Duration
+	applyInterval    time.Duration
+	rpcTimeout       time.Duration
+
 	electionTimer       *time.Timer
 	appendEntriesTimers map[string]*time.Timer
 	applyTimer          *time.Timer
@@ -66,7 +64,15 @@ type Raft struct {
 	UnimplementedRaftServer
 }
 
-type raftState struct {
+func (rf *Raft) loadOption(o *Options) {
+	rf.me = o.NativeName
+	rf.electionTimeout = o.ElectionTimeout
+	rf.heartbeatTimeout = o.ElectionTimeout
+	rf.applyInterval = o.ApplyInterval
+	rf.rpcTimeout = o.RPCTimeout
+}
+
+type RaftState struct {
 	Term              int32
 	VoteFor           string
 	CommitIndex       int32
@@ -75,8 +81,8 @@ type raftState struct {
 	LogEntries        []*LogEntry
 }
 
-func (rf *Raft) getRaftBootstrapState() *raftState {
-	return &raftState{
+func (rf *Raft) getRaftBootstrapState() *RaftState {
+	return &RaftState{
 		Term:              0,
 		VoteFor:           "",
 		CommitIndex:       0,
@@ -92,8 +98,8 @@ func (rf *Raft) getRaftBootstrapState() *raftState {
 	}
 }
 
-func (rf *Raft) getRaftState() *raftState {
-	return &raftState{
+func (rf *Raft) getRaftState() *RaftState {
+	return &RaftState{
 		Term:              rf.term,
 		VoteFor:           rf.voteFor,
 		CommitIndex:       rf.commitIndex,
@@ -103,7 +109,7 @@ func (rf *Raft) getRaftState() *raftState {
 	}
 }
 
-func (rf *Raft) loadRaftState(r *raftState) {
+func (rf *Raft) loadRaftState(r *RaftState) {
 	rf.term = r.Term
 	rf.voteFor = r.VoteFor
 	rf.commitIndex = r.CommitIndex
@@ -138,7 +144,7 @@ func (rf *Raft) readPersist(data []byte) {
 		return
 	}
 
-	r := &raftState{}
+	r := &RaftState{}
 	if err := rf.coder.Decode(data, r); err != nil {
 		log.Fatal("raft read persist error")
 	}
@@ -176,14 +182,14 @@ func (rf *Raft) lastLogTermIndex() (int32, int32) {
 	return term, index
 }
 
-func randElectionTimeout() time.Duration {
-	r := time.Duration(rand.Int63()) % ElectionTimeout
-	return ElectionTimeout + r
+func (rf *Raft) randElectionTimeout() time.Duration {
+	r := time.Duration(rand.Int63()) % rf.electionTimeout
+	return rf.electionTimeout + r
 }
 
 func (rf *Raft) resetElectionTimer() {
 	rf.electionTimer.Stop()
-	rf.electionTimer.Reset(randElectionTimeout())
+	rf.electionTimer.Reset(rf.randElectionTimeout())
 }
 
 func (rf *Raft) resetHeartBeatTimers() {
@@ -201,6 +207,8 @@ func (rf *Raft) resetHeartBeatTimer(name string) {
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
 	close(rf.stopCh)
+	close(rf.applyCh)
+	close(rf.notifyApplyCh)
 }
 
 func (rf *Raft) killed() bool {
@@ -232,7 +240,7 @@ func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 }
 
 func (rf *Raft) startApplyLogs() {
-	defer rf.applyTimer.Reset(ApplyInterval)
+	defer rf.applyTimer.Reset(rf.applyInterval)
 
 	rf.mu.Lock()
 	var msgs []ApplyMsg
@@ -312,12 +320,12 @@ func (rf *Raft) appendEntries() {
 func (rf *Raft) Start(peers map[string]RaftClient) {
 	rf.peers = peers
 
-	rf.electionTimer = time.NewTimer(randElectionTimeout())
+	rf.electionTimer = time.NewTimer(rf.randElectionTimeout())
 	rf.appendEntriesTimers = make(map[string]*time.Timer)
 	for k := range rf.peers {
-		rf.appendEntriesTimers[k] = time.NewTimer(HeartBeatTimeout)
+		rf.appendEntriesTimers[k] = time.NewTimer(rf.heartbeatTimeout)
 	}
-	rf.applyTimer = time.NewTimer(ApplyInterval)
+	rf.applyTimer = time.NewTimer(rf.applyInterval)
 	rf.notifyApplyCh = make(chan struct{}, 100)
 
 	go rf.listenApplyMsg()

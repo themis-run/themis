@@ -56,7 +56,7 @@ func (rf *Raft) doInstallSnapshot(peerName string, req *InstallSnapshotRequest, 
 	t := time.Now()
 	defer logging.Debugf("%s -> %s vote request time: %d ms\n", rf.me, peerName, time.Now().Sub(t)/time.Millisecond)
 
-	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rf.rpcTimeout)
 	defer cancel()
 
 	reply, err = rf.peers[peerName].InstallSnapshot(ctx, req)

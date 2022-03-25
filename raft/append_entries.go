@@ -191,7 +191,7 @@ func (rf *Raft) doAppendLogsToPeer(name string, req *AppendEntriesRequest) (resp
 		From: rf.me,
 		To:   name,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), rf.rpcTimeout)
 	defer cancel()
 
 	return rf.peers[name].AppendEntries(ctx, req)

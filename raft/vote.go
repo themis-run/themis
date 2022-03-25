@@ -58,7 +58,7 @@ func (rf *Raft) Vote(ctx context.Context, req *VoteRequest) (reply *VoteReply, e
 
 func (rf *Raft) startElection() {
 	rf.mu.Lock()
-	rf.electionTimer.Reset(randElectionTimeout())
+	rf.electionTimer.Reset(rf.randElectionTimeout())
 	if rf.role == Leader {
 		rf.mu.Unlock()
 		return
@@ -85,7 +85,7 @@ func (rf *Raft) startElection() {
 				To:   name,
 			}
 
-			ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), rf.rpcTimeout)
 			defer cancel()
 
 			t := time.Now()
