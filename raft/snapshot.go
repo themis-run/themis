@@ -3,6 +3,8 @@ package raft
 import (
 	"context"
 	"time"
+
+	"go.themis.run/themis/logging"
 )
 
 func (rf *Raft) InstallSnapshot(ctx context.Context, req *InstallSnapshotRequest) (reply *InstallSnapshotReply, err error) {
@@ -41,7 +43,8 @@ func (rf *Raft) InstallSnapshot(ctx context.Context, req *InstallSnapshotRequest
 	var state []byte
 	state, err = rf.getPersistData()
 	if err != nil {
-		//
+		logging.Debugf("%s get persist data error ", rf.me)
+		logging.Debug(err)
 		return
 	}
 
@@ -50,6 +53,9 @@ func (rf *Raft) InstallSnapshot(ctx context.Context, req *InstallSnapshotRequest
 }
 
 func (rf *Raft) doInstallSnapshot(peerName string, req *InstallSnapshotRequest, reply *InstallSnapshotReply) (err error) {
+	t := time.Now()
+	defer logging.Debugf("%s -> %s vote request time: %d ms\n", rf.me, peerName, time.Now().Sub(t)/time.Millisecond)
+
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 
@@ -73,6 +79,8 @@ func (rf *Raft) sendInstallSnapshot(peerName string) {
 
 		if err := rf.doInstallSnapshot(peerName, req, reply); err != nil {
 			// avoid full CPU
+			logging.Debugf("%s -> %s do install snapshot error ", rf.me, peerName)
+			logging.Debug(err)
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
