@@ -198,7 +198,7 @@ var New = func(opts *Options) *logger {
 	}
 
 	return &logger{
-		log.New(out, fmt.Sprintf("%s[THIMES]%s", dracarys, reset), log.LstdFlags|log.Lshortfile),
+		log.New(out, fmt.Sprintf("%s[THEMIS]%s", dracarys, reset), log.LstdFlags|log.Lshortfile),
 		opts,
 	}
 }
