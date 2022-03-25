@@ -3,6 +3,8 @@ package raft
 import (
 	context "context"
 	"time"
+
+	"go.themis.run/themis/logging"
 )
 
 func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (reply *AppendEntriesReply, err error) {
@@ -10,6 +12,10 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 	rf.mu.Lock()
 
 	reply.Term = rf.term
+	reply.Base = &RaftBase{
+		From: rf.me,
+		To:   req.Base.From,
+	}
 
 	if rf.term > req.Term {
 		rf.mu.Unlock()
@@ -22,31 +28,22 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 	_, lastLogIndex := rf.lastLogTermIndex()
 
 	if req.PrevLogIndex < int32(rf.lastSnapshotIndex) {
-		reply.Success = false
 		reply.NextIndex = int32(rf.lastSnapshotIndex) + 1
 	} else if req.PrevLogIndex > lastLogIndex {
-		reply.Success = false
 		reply.NextIndex = rf.getNextIndex()
 	} else if req.PrevLogIndex == rf.lastSnapshotIndex {
-		if rf.outOfOrderAppendEntries(req) {
-			reply.Success = false
-			reply.NextIndex = 0
-		} else {
+		if !rf.outOfOrderAppendEntries(req) {
 			reply.Success = true
-			rf.logEntries = append(rf.logEntries[:1], req.Entries...) // 保留 logs[0]
+			rf.logEntries = append(rf.logEntries[:1], req.Entries...)
 			reply.NextIndex = rf.getNextIndex()
 		}
 	} else if rf.logEntries[rf.getRealIdxByLogIndex(req.PrevLogIndex)].Term == req.PrevLogTerm {
-		if rf.outOfOrderAppendEntries(req) {
-			reply.Success = false
-			reply.NextIndex = 0
-		} else {
+		if !rf.outOfOrderAppendEntries(req) {
 			reply.Success = true
 			rf.logEntries = append(rf.logEntries[0:rf.getRealIdxByLogIndex(req.PrevLogIndex)+1], req.Entries...)
 			reply.NextIndex = rf.getNextIndex()
 		}
 	} else {
-		reply.Success = false
 		term := rf.logEntries[rf.getRealIdxByLogIndex(req.PrevLogIndex)].Term
 		idx := req.PrevLogIndex
 		for idx > rf.commitIndex && idx > rf.lastSnapshotIndex && rf.logEntries[rf.getRealIdxByLogIndex(idx)].Term == term {
@@ -68,10 +65,10 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 	return
 }
 
-func (rf *Raft) outOfOrderAppendEntries(args *AppendEntriesRequest) bool {
-	argsLastIndex := args.PrevLogIndex + int32(len(args.Entries))
+func (rf *Raft) outOfOrderAppendEntries(req *AppendEntriesRequest) bool {
+	reqLastIndex := req.PrevLogIndex + int32(len(req.Entries))
 	lastTerm, lastIndex := rf.lastLogTermIndex()
-	if argsLastIndex < lastIndex && lastTerm == args.Term {
+	if reqLastIndex < lastIndex && lastTerm == req.Term {
 		return true
 	}
 	return false
@@ -106,14 +103,20 @@ func (rf *Raft) sendAppendEntriesRPCToPeer(name string) {
 		rf.resetHeartBeatTimer(name)
 		rf.mu.Unlock()
 
-		reply := &AppendEntriesReply{}
-		if err := rf.doAppendLogsToPeer(name, req, reply); err != nil {
-			// log
+		t := time.Now()
+		reply, err := rf.doAppendLogsToPeer(name, req)
+		logging.Debugf("%s -> %s appendLogs request time: %d ms\n", rf.me, name, time.Now().Sub(t)/time.Millisecond)
+		if err != nil {
+			logging.Debugf("%s send to %s append log error", rf.me, name)
+			logging.Debug(err)
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 
 		if isRetry := rf.processAppendLogsReply(name, req, reply); isRetry {
+			// appendLogs fail because follower' nextIndex more than the nextIndex recorded by the Leader.
+			// avoid full CPU
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 		return
@@ -156,6 +159,7 @@ func (rf *Raft) processAppendLogsReply(peerName string, req *AppendEntriesReques
 	}
 
 	go rf.sendInstallSnapshot(peerName)
+
 	return false
 }
 
@@ -182,12 +186,15 @@ func (rf *Raft) updateCommitIndex() {
 	}
 }
 
-func (rf *Raft) doAppendLogsToPeer(name string, req *AppendEntriesRequest, resp *AppendEntriesReply) (err error) {
+func (rf *Raft) doAppendLogsToPeer(name string, req *AppendEntriesRequest) (resp *AppendEntriesReply, err error) {
+	req.Base = &RaftBase{
+		From: rf.me,
+		To:   name,
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 
-	resp, err = rf.peers[name].AppendEntries(ctx, req)
-	return err
+	return rf.peers[name].AppendEntries(ctx, req)
 }
 
 func (rf *Raft) getAppendLogs(name string) (prevLogIndex, prevLogTerm int32, entries []*LogEntry) {
