@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.themis.run/themis/codec"
+	"go.themis.run/themis/logging"
 )
 
 func init() {
@@ -15,18 +16,18 @@ func init() {
 }
 
 const (
-	ElectionTimeout  = time.Millisecond * 300 * 2
-	HeartBeatTimeout = time.Millisecond * 150 * 2
-	ApplyInterval    = time.Millisecond * 100 * 2
-	RPCTimeout       = time.Millisecond * 100 * 2
+	ElectionTimeout  = time.Millisecond * 900
+	HeartBeatTimeout = time.Millisecond * 450
+	ApplyInterval    = time.Millisecond * 300
+	RPCTimeout       = time.Millisecond * 300
 )
 
-type Role int
+type Role string
 
 const (
-	Follower  Role = 0
-	Candidate Role = 1
-	Leader    Role = 2
+	Follower  Role = "Follwer"
+	Candidate Role = "Candidate"
+	Leader    Role = "Leader"
 )
 
 type ApplyMsg struct {
@@ -146,6 +147,7 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 func (rf *Raft) changeRole(role Role) {
+	logging.Debugf("%s change role: %s -> %s\n", rf.me, rf.role, role)
 	rf.role = role
 	switch role {
 	case Follower:
@@ -207,7 +209,7 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) Put(command []byte) (int32, int32, bool) {
-	// Your code here (2B).
+	logging.Info(rf)
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
@@ -241,9 +243,7 @@ func (rf *Raft) startApplyLogs() {
 			Command:      "installSnapShot",
 			CommandIndex: rf.lastSnapshotIndex,
 		})
-
 	} else if rf.commitIndex <= rf.lastApplied {
-		// snapShot 没有更新 commitidx
 		msgs = make([]ApplyMsg, 0)
 	} else {
 		msgs = make([]ApplyMsg, 0, rf.commitIndex-rf.lastApplied)
