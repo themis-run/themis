@@ -5,9 +5,9 @@ import (
 )
 
 type Store interface {
-	Set(key string, value []byte, ttl time.Duration)
-	Get(key string) *Node
-	Delete(key string)
+	Set(key string, value []byte, ttl time.Duration) *Event
+	Get(key string) *Event
+	Delete(key string) *Event
 
 	Watch(key string, action Opreation)
 }
@@ -42,7 +42,7 @@ type store struct {
 	errorCh    chan error
 }
 
-func (s *store) Set(key string, value []byte, ttl time.Duration) {
+func (s *store) Set(key string, value []byte, ttl time.Duration) *Event {
 	node := newNode(key, value, ttl)
 	event := s.kv.Set(key, node)
 
@@ -53,9 +53,10 @@ func (s *store) Set(key string, value []byte, ttl time.Duration) {
 	}
 
 	s.eventCh <- event
+	return event
 }
 
-func (s *store) Get(key string) *Node {
+func (s *store) Get(key string) *Event {
 	event, ok := s.kv.Get(key)
 	if !ok {
 		return nil
@@ -63,14 +64,15 @@ func (s *store) Get(key string) *Node {
 
 	s.eventCh <- event
 
-	return event.Node
+	return event
 }
 
-func (s *store) Delete(key string) {
+func (s *store) Delete(key string) *Event {
 	event := s.kv.Delete(key)
 
 	s.ttlManager.remove(event.Node)
 	s.eventCh <- event
+	return event
 }
 
 func (s *store) listenEvent() {
