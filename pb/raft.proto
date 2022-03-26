@@ -10,7 +10,7 @@ message RaftBase{
 
 message VoteRequest {
     int32 Term = 1;
-    int32 CandidateID = 2;
+    string CandidateName = 2;
     int32 LastLogIndex = 3;
     int32 LastLogTerm = 4;
     RaftBase Base = 5;
@@ -18,7 +18,7 @@ message VoteRequest {
 
 message VoteReply{
     int32 Term = 1;
-    string VoteGranted = 2;
+    bool VoteGranted = 2;
     RaftBase Base = 3;
 }
 
@@ -30,9 +30,9 @@ message LogEntry{
 
 message AppendEntriesRequest{
     int32 Term = 1;
-    int32 LeaderID = 2;
+    string LeaderName = 2;
     int32 PrevLogIndex = 3;
-    int32 PrevLogLogTerm = 4;
+    int32 PrevLogTerm = 4;
     repeated LogEntry Entries = 5;
     int32 LeaderCommit = 6;
     RaftBase Base = 7;
@@ -47,7 +47,7 @@ message AppendEntriesReply{
 
 message InstallSnapshotRequest{
     int32 Term = 1;
-    int32 LeaderID = 2;
+    string LeaderName = 2;
     int32 LastIncludedIndex = 3;
     int32 LastIncludedTerm = 4;
     bytes Data = 5;
@@ -59,7 +59,7 @@ message InstallSnapshotReply{
     RaftBase Base = 2;
 }
 
-service RaftService{
+service Raft{
     rpc InstallSnapshot (InstallSnapshotRequest) returns (InstallSnapshotReply);
     
     rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesReply);

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "go.themis.run/themis/pb";
+
+enum OperateType {
+    All    = 0;
+    Set    = 1;
+    Get    = 2;
+    Delete = 3;
+    Write  = 4;
+    Expire = 5;
+}
+
+message Commend {
+    KV kv = 1;
+    OperateType type = 2;
+}
+
+message Header {
+    string member_name = 1;
+    string member_address = 2;
+    string role = 3;
+
+    string leader_name = 4;
+    string leader_address = 5;
+
+    // is success
+    bool success = 6;
+}
+
+message KV {
+    string key = 1;
+    bytes value = 2;
+    int64 create_time = 3;
+    int64 ttl = 4;
+}
+
+message PutRequest {
+    KV kv = 1;
+}
+
+message PutResponse {
+    Header header = 1;
+}
+
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    Header header = 1;
+    KV kv = 2;
+}
+
+message DeleteRequest {
+    string key = 1;
+}
+
+message DeleteResponse {
+    Header header = 1;
+}
+
+message WatchRequest {
+    string key = 1;
+    OperateType type = 2;
+}
+
+message WatchResponse {
+    Header header = 1;
+
+    KV prev_kv = 2;
+    KV kv = 3;
+
+    OperateType type = 4;
+}
+
+service Themis {
+    rpc Put (PutRequest) returns (PutResponse);
+    rpc Get (GetRequest) returns (GetResponse);
+    rpc Delete (DeleteRequest) returns (DeleteResponse);
+    rpc Watch (WatchRequest) returns (stream WatchResponse);
+}

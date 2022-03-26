@@ -3,6 +3,8 @@ package store
 import (
 	"errors"
 	"time"
+
+	"go.themis.run/themis/codec"
 )
 
 var ErrorAppendLog = errors.New("wal append error")
@@ -10,6 +12,7 @@ var ErrorAppendLog = errors.New("wal append error")
 const (
 	DefaultLogPersistTime   = 200 * time.Second
 	DefaultLogWriteFileTime = 20 * time.Millisecond
+	DefaultLogCodecName     = "json"
 )
 
 type Log interface {
@@ -19,7 +22,7 @@ type Log interface {
 }
 
 type log struct {
-	Codec
+	codec.Codec
 	readWriter     ReadWriter
 	sequenceNumber uint64
 	logCache       chan []byte
@@ -38,7 +41,7 @@ func NewLog(path string) (Log, error) {
 	}
 
 	l := &log{
-		Codec:          GetCodec(defaultCodecName),
+		Codec:          codec.Get(DefaultLogCodecName),
 		readWriter:     rw,
 		sequenceNumber: rw.NextSequenceNumber(),
 		logCache:       make(chan []byte, 100),
@@ -76,7 +79,8 @@ func (l *log) Recover() ([]*Event, error) {
 
 	events := make([]*Event, 0)
 	for _, v := range data {
-		event, err := l.Decode(v)
+		event := &Event{}
+		err := l.Decode(v, event)
 		if err != nil {
 			return nil, err
 		}

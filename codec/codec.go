@@ -1,4 +1,4 @@
-package store
+package codec
 
 import (
 	"encoding/json"
@@ -7,17 +7,22 @@ import (
 
 type Codec interface {
 	Name() string
-	Decode(data []byte) (*Event, error)
-	Encode(event *Event) ([]byte, error)
+	Decode(data []byte, v interface{}) error
+	Encode(v interface{}) ([]byte, error)
 }
 
 var (
 	codecMap         = make(map[string]Codec)
 	lock             sync.Mutex
-	defaultCodecName = "json"
+	defaultCodecName = Json
 )
 
-func GetCodec(name string) Codec {
+const (
+	Json = "json"
+	Gob  = "gob"
+)
+
+func Get(name string) Codec {
 	c, ok := codecMap[name]
 	if ok {
 		return c
@@ -26,7 +31,7 @@ func GetCodec(name string) Codec {
 	return &codec{name: defaultCodecName}
 }
 
-func RegisterCodec(name string, codec Codec) {
+func Register(name string, codec Codec) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -48,12 +53,11 @@ func (c *codec) Name() string {
 	return c.name
 }
 
-func (c *codec) Decode(data []byte) (*Event, error) {
-	event := &Event{}
-	err := json.Unmarshal(data, event)
-	return event, err
+func (c *codec) Decode(data []byte, v interface{}) error {
+	err := json.Unmarshal(data, v)
+	return err
 }
 
-func (c *codec) Encode(event *Event) ([]byte, error) {
-	return json.Marshal(event)
+func (c *codec) Encode(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
 }
