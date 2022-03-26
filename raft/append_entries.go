@@ -1,7 +1,7 @@
 package raft
 
 import (
-	context "context"
+	"context"
 	"time"
 
 	"go.themis.run/themis/logging"

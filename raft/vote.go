@@ -111,7 +111,7 @@ func (rf *Raft) startElection() {
 		}(ticketsCh, name)
 	}
 
-	for {
+	for len(rf.peers) > 0 {
 		vote := <-ticketsCh
 		count += 1
 		if vote {

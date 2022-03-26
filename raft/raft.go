@@ -217,7 +217,6 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) Put(command []byte) (int32, int32, bool) {
-	logging.Info(rf)
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
@@ -233,6 +232,7 @@ func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 			Index:   int32(index),
 		})
 		rf.matchIndex[rf.me] = index
+		rf.updateCommitIndex()
 		rf.persist()
 	}
 	rf.resetHeartBeatTimers()
@@ -245,6 +245,7 @@ func (rf *Raft) ApplyChan() <-chan ApplyMsg {
 
 func (rf *Raft) startApplyLogs() {
 	defer rf.applyTimer.Reset(rf.applyInterval)
+	logging.Debugf("%s start apply logs", rf.me)
 
 	rf.mu.Lock()
 	var msgs []ApplyMsg
@@ -316,6 +317,10 @@ func (rf *Raft) listenElection() {
 }
 
 func (rf *Raft) appendEntries() {
+	if len(rf.peers) == 0 {
+
+	}
+
 	for name := range rf.peers {
 		go rf.appendEntriesToPeer(name)
 	}
