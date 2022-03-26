@@ -26,7 +26,7 @@ const (
 type ApplyMsg struct {
 	CommandValid bool
 	CommandIndex int32
-	Command      interface{}
+	Command      []byte
 }
 
 type Raft struct {
@@ -80,6 +80,11 @@ type RaftState struct {
 	LastSnapshotTerm  int32
 	LogEntries        []*LogEntry
 }
+
+const (
+	InstallSnapshotToStore = "installSnapShot"
+	AddMemeberToRaft       = "addMemberToRaft"
+)
 
 func (rf *Raft) getRaftBootstrapState() *RaftState {
 	return &RaftState{
@@ -253,7 +258,7 @@ func (rf *Raft) startApplyLogs() {
 		msgs = make([]ApplyMsg, 0, 1)
 		msgs = append(msgs, ApplyMsg{
 			CommandValid: false,
-			Command:      "installSnapShot",
+			Command:      []byte(InstallSnapshotToStore),
 			CommandIndex: rf.lastSnapshotIndex,
 		})
 	} else if rf.commitIndex <= rf.lastApplied {
