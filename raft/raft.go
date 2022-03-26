@@ -239,6 +239,10 @@ func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 	return index, term, isLeader
 }
 
+func (rf *Raft) ApplyChan() <-chan ApplyMsg {
+	return rf.applyCh
+}
+
 func (rf *Raft) startApplyLogs() {
 	defer rf.applyTimer.Reset(rf.applyInterval)
 
@@ -335,10 +339,10 @@ func (rf *Raft) Start(peers map[string]RaftClient) {
 	rf.appendEntries()
 }
 
-func NewRaft(me string, persister *Persister, applyCh chan ApplyMsg) *Raft {
+func NewRaft(persister *Persister, applyCh chan ApplyMsg, opts *Options) *Raft {
 	rf := &Raft{}
+	rf.loadOption(opts)
 	rf.persister = persister
-	rf.me = me
 	rf.applyCh = applyCh
 	rf.coder = codec.Get(codec.Gob)
 
