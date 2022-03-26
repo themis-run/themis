@@ -79,5 +79,6 @@ service Themis {
     rpc Put (PutRequest) returns (PutResponse);
     rpc Get (GetRequest) returns (GetResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
-    rpc Watch (WatchRequest) returns (stream WatchResponse);
+    rpc WatchStream (WatchRequest) returns (stream WatchResponse);
+    rpc Watch (WatchRequest) returns (WatchResponse);
 }

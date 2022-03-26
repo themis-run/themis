@@ -775,7 +775,7 @@ var file_server_proto_rawDesc = []byte{
 	0x6c, 0x6c, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x10, 0x01, 0x12, 0x07, 0x0a,
 	0x03, 0x47, 0x65, 0x74, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
 	0x10, 0x03, 0x12, 0x09, 0x0a, 0x05, 0x57, 0x72, 0x69, 0x74, 0x65, 0x10, 0x04, 0x12, 0x0a, 0x0a,
-	0x06, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x10, 0x05, 0x32, 0xb9, 0x01, 0x0a, 0x06, 0x54, 0x68,
+	0x06, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x10, 0x05, 0x32, 0xed, 0x01, 0x0a, 0x06, 0x54, 0x68,
 	0x65, 0x6d, 0x69, 0x73, 0x12, 0x26, 0x0a, 0x03, 0x50, 0x75, 0x74, 0x12, 0x0e, 0x2e, 0x70, 0x62,
 	0x2e, 0x50, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x70, 0x62,
 	0x2e, 0x50, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x03,
@@ -784,12 +784,15 @@ var file_server_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x11,
 	0x2e, 0x70, 0x62, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x12, 0x2e, 0x70, 0x62, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x05, 0x57, 0x61, 0x74, 0x63, 0x68, 0x12, 0x10,
-	0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x11, 0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x30, 0x01, 0x42, 0x19, 0x5a, 0x17, 0x67, 0x6f, 0x2e, 0x74, 0x68, 0x65, 0x6d,
-	0x69, 0x73, 0x2e, 0x72, 0x75, 0x6e, 0x2f, 0x74, 0x68, 0x65, 0x6d, 0x69, 0x73, 0x2f, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x0b, 0x57, 0x61, 0x74, 0x63, 0x68, 0x53, 0x74,
+	0x72, 0x65, 0x61, 0x6d, 0x12, 0x10, 0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63, 0x68, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63,
+	0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x12, 0x2c, 0x0a, 0x05, 0x57,
+	0x61, 0x74, 0x63, 0x68, 0x12, 0x10, 0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63, 0x68, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x2e, 0x57, 0x61, 0x74, 0x63,
+	0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x19, 0x5a, 0x17, 0x67, 0x6f, 0x2e,
+	0x74, 0x68, 0x65, 0x6d, 0x69, 0x73, 0x2e, 0x72, 0x75, 0x6e, 0x2f, 0x74, 0x68, 0x65, 0x6d, 0x69,
+	0x73, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -836,13 +839,15 @@ var file_server_proto_depIdxs = []int32{
 	4,  // 12: pb.Themis.Put:input_type -> pb.PutRequest
 	6,  // 13: pb.Themis.Get:input_type -> pb.GetRequest
 	8,  // 14: pb.Themis.Delete:input_type -> pb.DeleteRequest
-	10, // 15: pb.Themis.Watch:input_type -> pb.WatchRequest
-	5,  // 16: pb.Themis.Put:output_type -> pb.PutResponse
-	7,  // 17: pb.Themis.Get:output_type -> pb.GetResponse
-	9,  // 18: pb.Themis.Delete:output_type -> pb.DeleteResponse
-	11, // 19: pb.Themis.Watch:output_type -> pb.WatchResponse
-	16, // [16:20] is the sub-list for method output_type
-	12, // [12:16] is the sub-list for method input_type
+	10, // 15: pb.Themis.WatchStream:input_type -> pb.WatchRequest
+	10, // 16: pb.Themis.Watch:input_type -> pb.WatchRequest
+	5,  // 17: pb.Themis.Put:output_type -> pb.PutResponse
+	7,  // 18: pb.Themis.Get:output_type -> pb.GetResponse
+	9,  // 19: pb.Themis.Delete:output_type -> pb.DeleteResponse
+	11, // 20: pb.Themis.WatchStream:output_type -> pb.WatchResponse
+	11, // 21: pb.Themis.Watch:output_type -> pb.WatchResponse
+	17, // [17:22] is the sub-list for method output_type
+	12, // [12:17] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name
@@ -1023,7 +1028,8 @@ type ThemisClient interface {
 	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
-	Watch(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (Themis_WatchClient, error)
+	WatchStream(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (Themis_WatchStreamClient, error)
+	Watch(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (*WatchResponse, error)
 }
 
 type themisClient struct {
@@ -1061,12 +1067,12 @@ func (c *themisClient) Delete(ctx context.Context, in *DeleteRequest, opts ...gr
 	return out, nil
 }
 
-func (c *themisClient) Watch(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (Themis_WatchClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Themis_serviceDesc.Streams[0], "/pb.Themis/Watch", opts...)
+func (c *themisClient) WatchStream(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (Themis_WatchStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Themis_serviceDesc.Streams[0], "/pb.Themis/WatchStream", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &themisWatchClient{stream}
+	x := &themisWatchStreamClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -1076,16 +1082,16 @@ func (c *themisClient) Watch(ctx context.Context, in *WatchRequest, opts ...grpc
 	return x, nil
 }
 
-type Themis_WatchClient interface {
+type Themis_WatchStreamClient interface {
 	Recv() (*WatchResponse, error)
 	grpc.ClientStream
 }
 
-type themisWatchClient struct {
+type themisWatchStreamClient struct {
 	grpc.ClientStream
 }
 
-func (x *themisWatchClient) Recv() (*WatchResponse, error) {
+func (x *themisWatchStreamClient) Recv() (*WatchResponse, error) {
 	m := new(WatchResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1093,12 +1099,22 @@ func (x *themisWatchClient) Recv() (*WatchResponse, error) {
 	return m, nil
 }
 
+func (c *themisClient) Watch(ctx context.Context, in *WatchRequest, opts ...grpc.CallOption) (*WatchResponse, error) {
+	out := new(WatchResponse)
+	err := c.cc.Invoke(ctx, "/pb.Themis/Watch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ThemisServer is the server API for Themis service.
 type ThemisServer interface {
 	Put(context.Context, *PutRequest) (*PutResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
-	Watch(*WatchRequest, Themis_WatchServer) error
+	WatchStream(*WatchRequest, Themis_WatchStreamServer) error
+	Watch(context.Context, *WatchRequest) (*WatchResponse, error)
 }
 
 // UnimplementedThemisServer can be embedded to have forward compatible implementations.
@@ -1114,8 +1130,11 @@ func (*UnimplementedThemisServer) Get(context.Context, *GetRequest) (*GetRespons
 func (*UnimplementedThemisServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (*UnimplementedThemisServer) Watch(*WatchRequest, Themis_WatchServer) error {
-	return status.Errorf(codes.Unimplemented, "method Watch not implemented")
+func (*UnimplementedThemisServer) WatchStream(*WatchRequest, Themis_WatchStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method WatchStream not implemented")
+}
+func (*UnimplementedThemisServer) Watch(context.Context, *WatchRequest) (*WatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Watch not implemented")
 }
 
 func RegisterThemisServer(s *grpc.Server, srv ThemisServer) {
@@ -1176,25 +1195,43 @@ func _Themis_Delete_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Themis_Watch_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Themis_WatchStream_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(WatchRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ThemisServer).Watch(m, &themisWatchServer{stream})
+	return srv.(ThemisServer).WatchStream(m, &themisWatchStreamServer{stream})
 }
 
-type Themis_WatchServer interface {
+type Themis_WatchStreamServer interface {
 	Send(*WatchResponse) error
 	grpc.ServerStream
 }
 
-type themisWatchServer struct {
+type themisWatchStreamServer struct {
 	grpc.ServerStream
 }
 
-func (x *themisWatchServer) Send(m *WatchResponse) error {
+func (x *themisWatchStreamServer) Send(m *WatchResponse) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func _Themis_Watch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ThemisServer).Watch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Themis/Watch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ThemisServer).Watch(ctx, req.(*WatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Themis_serviceDesc = grpc.ServiceDesc{
@@ -1213,11 +1250,15 @@ var _Themis_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Delete",
 			Handler:    _Themis_Delete_Handler,
 		},
+		{
+			MethodName: "Watch",
+			Handler:    _Themis_Watch_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Watch",
-			Handler:       _Themis_Watch_Handler,
+			StreamName:    "WatchStream",
+			Handler:       _Themis_WatchStream_Handler,
 			ServerStreams: true,
 		},
 	},

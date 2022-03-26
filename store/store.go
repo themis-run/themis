@@ -9,7 +9,7 @@ type Store interface {
 	Get(key string) *Event
 	Delete(key string) *Event
 
-	Watch(key string, action Opreation)
+	Watch(key string, action Opreation, isStream bool) Watcher
 }
 
 func New(path string, size uint) (Store, error) {
@@ -91,6 +91,6 @@ func (s *store) listenEvent() {
 	}
 }
 
-func (s *store) Watch(key string, action Opreation) {
-
+func (s *store) Watch(key string, action Opreation, isStream bool) Watcher {
+	return s.watcherHub.newWatcher(key, action, isStream)
 }

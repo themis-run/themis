@@ -129,8 +129,47 @@ func (s *Server) Delete(ctx context.Context, req *themis.DeleteRequest) (*themis
 	return reply, nil
 }
 
-func (s *Server) Watch(req *themis.WatchRequest, tw themis.Themis_WatchServer) error {
+func (s *Server) WatchStream(req *themis.WatchRequest, tw themis.Themis_WatchStreamServer) error {
 	return nil
+}
+
+func (s *Server) Watch(ctx context.Context, req *themis.WatchRequest) (*themis.WatchResponse, error) {
+	reply := &themis.WatchResponse{
+		Header: &themis.Header{
+			MemberName:    s.info.Name,
+			MemberAddress: s.info.Address,
+			LeaderName:    s.info.LeaderName,
+			LeaderAddress: s.info.LeaderAddress,
+			Role:          string(s.info.role),
+			Success:       false,
+		},
+	}
+
+	select {
+	case <-ctx.Done():
+		return reply, ctx.Err()
+	default:
+	}
+
+	watcher := s.store.Watch(req.Key, req.Type.String(), false)
+
+	event := <-watcher.EventChan()
+
+	reply.Kv = &themis.KV{
+		Key:        event.Node.Key,
+		Value:      event.Node.Value,
+		CreateTime: event.Node.CreateTime.UnixMilli(),
+		Ttl:        event.Node.TTL.Milliseconds(),
+	}
+
+	reply.PrevKv = &themis.KV{
+		Key:        event.OldNode.Key,
+		Value:      event.OldNode.Value,
+		CreateTime: event.OldNode.CreateTime.UnixMilli(),
+		Ttl:        event.OldNode.TTL.Milliseconds(),
+	}
+
+	return reply, nil
 }
 
 func (s *Server) listenCommmit() {
