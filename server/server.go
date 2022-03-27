@@ -2,13 +2,16 @@ package server
 
 import (
 	"context"
+	"net"
 	"time"
 
+	"go.themis.run/themis/config"
 	"go.themis.run/themis/logging"
 	themis "go.themis.run/themis/pb"
 	"go.themis.run/themis/raft"
 	"go.themis.run/themis/store"
 
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,8 +26,9 @@ type Server struct {
 }
 
 type NodeInfo struct {
-	Name    string
-	Address string
+	Name        string
+	Address     string
+	RaftAddress string
 
 	LeaderName    string
 	LeaderAddress string
@@ -32,8 +36,44 @@ type NodeInfo struct {
 	role raft.Role
 }
 
-func Run() {
+func New(cfg config.Config) *Server {
+	info := &NodeInfo{
+		Name:        cfg.Name,
+		Address:     cfg.Address,
+		RaftAddress: cfg.Raft.Address,
+	}
 
+	logging.DefaultLogger = logging.New(cfg.Log)
+
+	store, err := store.New(cfg.Path, cfg.Size)
+	if err != nil {
+		panic(err)
+	}
+
+	raft := raft.New(cfg.Raft)
+
+	return &Server{
+		store:  store,
+		raft:   raft,
+		info:   info,
+		stopch: make(chan struct{}),
+	}
+}
+
+func (s *Server) Run() {
+	s.raft.Run()
+
+	lis, err := net.Listen("tcp", s.info.Address)
+	if err != nil {
+		panic(err)
+	}
+
+	srv := grpc.NewServer()
+	themis.RegisterThemisServer(srv, s)
+
+	if err := srv.Serve(lis); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Server) Put(ctx context.Context, req *themis.PutRequest) (*themis.PutResponse, error) {
