@@ -22,7 +22,7 @@ type Config struct {
 	Log     *logging.Options `yaml:"logging"`
 }
 
-func Create(path string) *Config {
+func Create(path string) Config {
 	config := &Config{
 		Path: "./log",
 		Size: 16,
@@ -35,7 +35,7 @@ func Create(path string) *Config {
 	config.Raft.NativeName = config.Name
 	config.Raft.Address = config.Address
 
-	return config
+	return *config
 }
 
 func pathExist(path string) bool {
@@ -48,7 +48,7 @@ func pathExist(path string) bool {
 
 func readConfigBytes(path string) ([]byte, error) {
 	if path == "" {
-		path = "./themis.yaml"
+		path = "./themis.yml"
 	}
 
 	if !pathExist(path) {
