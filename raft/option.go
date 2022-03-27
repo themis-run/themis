@@ -8,6 +8,7 @@ import (
 
 type Options struct {
 	NativeName        string
+	Address           string
 	CodecType         string
 	ApplyMsgLength    int
 	SnapshotPath      string
@@ -37,6 +38,12 @@ type Option func(*Options)
 func WithNativeName(name string) Option {
 	return func(o *Options) {
 		o.NativeName = name
+	}
+}
+
+func WithAddress(address string) Option {
+	return func(o *Options) {
+		o.Address = address
 	}
 }
 
