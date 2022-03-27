@@ -7,24 +7,28 @@ import (
 )
 
 type Options struct {
-	NativeName       string
-	CodecType        string
-	ApplyMsgLength   int
-	ElectionTimeout  time.Duration
-	HeartBeatTimeout time.Duration
-	ApplyInterval    time.Duration
-	RPCTimeout       time.Duration
-	RaftPeers        map[string]string
+	NativeName        string
+	CodecType         string
+	ApplyMsgLength    int
+	SnapshotPath      string
+	MaxlogEntryLength int
+	ElectionTimeout   time.Duration
+	HeartBeatTimeout  time.Duration
+	ApplyInterval     time.Duration
+	RPCTimeout        time.Duration
+	RaftPeers         map[string]string
 }
 
 func DefaultOptions() *Options {
 	return &Options{
-		CodecType:        codec.Gob,
-		ApplyMsgLength:   10,
-		ElectionTimeout:  900 * time.Millisecond,
-		HeartBeatTimeout: 450 * time.Millisecond,
-		ApplyInterval:    300 * time.Millisecond,
-		RPCTimeout:       300 * time.Millisecond,
+		CodecType:         codec.Gob,
+		SnapshotPath:      "./snapshot",
+		MaxlogEntryLength: 20,
+		ApplyMsgLength:    10,
+		ElectionTimeout:   900 * time.Millisecond,
+		HeartBeatTimeout:  450 * time.Millisecond,
+		ApplyInterval:     300 * time.Millisecond,
+		RPCTimeout:        300 * time.Millisecond,
 	}
 }
 
@@ -78,5 +82,17 @@ func WithApplyInterval(t time.Duration) Option {
 func WithRPCTimeout(t time.Duration) Option {
 	return func(o *Options) {
 		o.RPCTimeout = t
+	}
+}
+
+func WithSnapshotPath(path string) Option {
+	return func(o *Options) {
+		o.SnapshotPath = path
+	}
+}
+
+func WithMaxlogEntryLength(length int) Option {
+	return func(o *Options) {
+		o.MaxlogEntryLength = length
 	}
 }

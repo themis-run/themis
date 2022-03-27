@@ -24,7 +24,7 @@ func New(opts ...Option) Server {
 	}
 
 	applyCh := make(chan ApplyMsg, o.ApplyMsgLength)
-	persister := MakePersister()
+	persister := MakePersister(o.NativeName, o.SnapshotPath)
 	r := NewRaft(persister, applyCh, o)
 
 	commitCh := make(chan []byte, o.ApplyMsgLength)
@@ -90,6 +90,8 @@ func (s *server) listenApplyMsg() {
 
 					s.commitCh <- v.Command
 				}
+
+				s.raft.addAppliedNum(msg.CommandIndex)
 			case AddMemeberToRaft:
 
 			}

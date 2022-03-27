@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"fmt"
 	"sync"
 
 	"go.themis.run/themis/logging"
@@ -21,8 +22,21 @@ type Persister struct {
 	snapshotReadWriter  store.ReadWriter
 }
 
-func MakePersister() *Persister {
-	return &Persister{}
+func MakePersister(name, path string) *Persister {
+	raftstateReadWriter, err := store.NewReadWriter(fmt.Sprintf("%s-%s-%s", path, name, DefaultRaftStateLogName))
+	if err != nil {
+		panic(err)
+	}
+
+	snapshotReadWriter, err := store.NewReadWriter(fmt.Sprintf("%s-%s-%s", path, name, DefaultSnapshotLogName))
+	if err != nil {
+		panic(err)
+	}
+
+	return &Persister{
+		raftstateReadWriter: raftstateReadWriter,
+		snapshotReadWriter:  snapshotReadWriter,
+	}
 }
 
 func (ps *Persister) SaveRaftState(state []byte) {
@@ -47,7 +61,10 @@ func (ps *Persister) ReadRaftState() []byte {
 		return nil
 	}
 
-	ps.raftstate = result[len(result)-1]
+	if len(result) > 0 {
+		ps.raftstate = result[len(result)-1]
+	}
+
 	return ps.raftstate
 }
 

@@ -53,6 +53,7 @@ type Raft struct {
 
 	voteFor           string
 	logEntries        []*LogEntry
+	maxlogEntryLength int
 	applyCh           chan ApplyMsg
 	commitIndex       int32
 	lastSnapshotIndex int32
@@ -71,6 +72,7 @@ func (rf *Raft) loadOption(o *Options) {
 	rf.heartbeatTimeout = o.ElectionTimeout
 	rf.applyInterval = o.ApplyInterval
 	rf.rpcTimeout = o.RPCTimeout
+	rf.maxlogEntryLength = o.MaxlogEntryLength
 }
 
 type RaftState struct {
@@ -123,6 +125,7 @@ func (rf *Raft) loadRaftState(r *RaftState) {
 	rf.lastSnapshotTerm = r.LastSnapshotTerm
 	if r.LogEntries != nil {
 		rf.logEntries = r.LogEntries
+		return
 	}
 	rf.logEntries = []*LogEntry{{
 		Term:    0,
@@ -256,14 +259,39 @@ func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 		})
 		rf.matchIndex[rf.me] = index
 		rf.updateCommitIndex()
+		if len(rf.logEntries) > rf.maxlogEntryLength {
+			rf.saveLogEntryToSnapshot()
+		}
 		rf.persist()
 	}
 	rf.resetHeartBeatTimers()
 	return index, term, isLeader
 }
 
+func (rf *Raft) saveLogEntryToSnapshot() {
+	index := rf.getRealIdxByLogIndex(rf.commitIndex) + 1
+	logEntries := rf.logEntries[:index]
+
+	snapshot := make([][]byte, 0)
+	for _, v := range logEntries {
+		bytes, err := proto.Marshal(v)
+		if err != nil {
+			logging.Error(err)
+			return
+		}
+
+		snapshot = append(snapshot, bytes)
+	}
+	rf.persister.SaveSnapshot(snapshot)
+	rf.logEntries = rf.logEntries[index:]
+}
+
 func (rf *Raft) ApplyChan() <-chan ApplyMsg {
 	return rf.applyCh
+}
+
+func (rf *Raft) addAppliedNum(num int32) {
+	rf.lastApplied += num
 }
 
 func (rf *Raft) startApplyLogs() {
@@ -372,7 +400,7 @@ func NewRaft(persister *Persister, applyCh chan ApplyMsg, opts *Options) *Raft {
 	rf.loadOption(opts)
 	rf.persister = persister
 	rf.applyCh = applyCh
-	rf.coder = codec.Get(codec.Gob)
+	rf.coder = codec.Get(codec.Json)
 
 	rf.stopCh = make(chan struct{})
 	rf.term = 0
@@ -380,6 +408,8 @@ func NewRaft(persister *Persister, applyCh chan ApplyMsg, opts *Options) *Raft {
 	rf.role = Follower
 	rf.logEntries = make([]*LogEntry, 1)
 	rf.readPersist(persister.ReadRaftState())
+	logging.Debugf("%s  raftstate:", rf.me)
+	logging.Debug(rf.getRaftState())
 
 	return rf
 }
