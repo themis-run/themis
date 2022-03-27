@@ -32,6 +32,10 @@ type NodeInfo struct {
 	role raft.Role
 }
 
+func Run() {
+
+}
+
 func (s *Server) Put(ctx context.Context, req *themis.PutRequest) (*themis.PutResponse, error) {
 	reply := &themis.PutResponse{
 		Header: &themis.Header{
@@ -50,7 +54,7 @@ func (s *Server) Put(ctx context.Context, req *themis.PutRequest) (*themis.PutRe
 	default:
 	}
 
-	commend := &themis.Commend{
+	commend := &themis.Command{
 		Type: themis.OperateType_Set,
 		Kv:   req.Kv,
 	}
@@ -113,7 +117,7 @@ func (s *Server) Delete(ctx context.Context, req *themis.DeleteRequest) (*themis
 	default:
 	}
 
-	commend := &themis.Commend{
+	commend := &themis.Command{
 		Type: themis.OperateType_Delete,
 		Kv: &themis.KV{
 			Key: req.Key,
@@ -178,7 +182,7 @@ func (s *Server) listenCommmit() {
 		case <-s.stopch:
 			break
 		case commendBuffer := <-s.raft.CommitChannel():
-			commend := &themis.Commend{}
+			commend := &themis.Command{}
 			err := proto.Unmarshal(commendBuffer, commend)
 			if err != nil {
 				logging.Error(err)

@@ -12,7 +12,7 @@ enum OperateType {
     Expire = 5;
 }
 
-message Commend {
+message Command {
     KV kv = 1;
     OperateType type = 2;
 }

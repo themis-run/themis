@@ -82,7 +82,7 @@ func (OperateType) EnumDescriptor() ([]byte, []int) {
 	return file_server_proto_rawDescGZIP(), []int{0}
 }
 
-type Commend struct {
+type Command struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -91,8 +91,8 @@ type Commend struct {
 	Type OperateType `protobuf:"varint,2,opt,name=type,proto3,enum=pb.OperateType" json:"type,omitempty"`
 }
 
-func (x *Commend) Reset() {
-	*x = Commend{}
+func (x *Command) Reset() {
+	*x = Command{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_server_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -100,13 +100,13 @@ func (x *Commend) Reset() {
 	}
 }
 
-func (x *Commend) String() string {
+func (x *Command) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Commend) ProtoMessage() {}
+func (*Command) ProtoMessage() {}
 
-func (x *Commend) ProtoReflect() protoreflect.Message {
+func (x *Command) ProtoReflect() protoreflect.Message {
 	mi := &file_server_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -118,19 +118,19 @@ func (x *Commend) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Commend.ProtoReflect.Descriptor instead.
-func (*Commend) Descriptor() ([]byte, []int) {
+// Deprecated: Use Command.ProtoReflect.Descriptor instead.
+func (*Command) Descriptor() ([]byte, []int) {
 	return file_server_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Commend) GetKv() *KV {
+func (x *Command) GetKv() *KV {
 	if x != nil {
 		return x.Kv
 	}
 	return nil
 }
 
-func (x *Commend) GetType() OperateType {
+func (x *Command) GetType() OperateType {
 	if x != nil {
 		return x.Type
 	}
@@ -716,7 +716,7 @@ var File_server_proto protoreflect.FileDescriptor
 
 var file_server_proto_rawDesc = []byte{
 	0x0a, 0x0c, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02,
-	0x70, 0x62, 0x22, 0x46, 0x0a, 0x07, 0x43, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x64, 0x12, 0x16, 0x0a,
+	0x70, 0x62, 0x22, 0x46, 0x0a, 0x07, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x16, 0x0a,
 	0x02, 0x6b, 0x76, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x06, 0x2e, 0x70, 0x62, 0x2e, 0x4b,
 	0x56, 0x52, 0x02, 0x6b, 0x76, 0x12, 0x23, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x0e, 0x32, 0x0f, 0x2e, 0x70, 0x62, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x65,
@@ -811,7 +811,7 @@ var file_server_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_server_proto_goTypes = []interface{}{
 	(OperateType)(0),       // 0: pb.OperateType
-	(*Commend)(nil),        // 1: pb.Commend
+	(*Command)(nil),        // 1: pb.Command
 	(*Header)(nil),         // 2: pb.Header
 	(*KV)(nil),             // 3: pb.KV
 	(*PutRequest)(nil),     // 4: pb.PutRequest
@@ -824,8 +824,8 @@ var file_server_proto_goTypes = []interface{}{
 	(*WatchResponse)(nil),  // 11: pb.WatchResponse
 }
 var file_server_proto_depIdxs = []int32{
-	3,  // 0: pb.Commend.kv:type_name -> pb.KV
-	0,  // 1: pb.Commend.type:type_name -> pb.OperateType
+	3,  // 0: pb.Command.kv:type_name -> pb.KV
+	0,  // 1: pb.Command.type:type_name -> pb.OperateType
 	3,  // 2: pb.PutRequest.kv:type_name -> pb.KV
 	2,  // 3: pb.PutResponse.header:type_name -> pb.Header
 	2,  // 4: pb.GetResponse.header:type_name -> pb.Header
@@ -860,7 +860,7 @@ func file_server_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_server_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Commend); i {
+			switch v := v.(*Command); i {
 			case 0:
 				return &v.state
 			case 1:

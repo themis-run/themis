@@ -78,7 +78,7 @@ func (s *server) listenApplyMsg() {
 			}
 
 			switch string(msg.Command) {
-			// raft log read to store
+			// raft log read to store, read all snapshot transfor command
 			case InstallSnapshotToStore:
 
 			case AddMemeberToRaft:
