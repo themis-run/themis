@@ -6,6 +6,7 @@ require (
 	github.com/cornelk/hashmap v1.0.1
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
 require (

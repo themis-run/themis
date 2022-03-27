@@ -72,7 +72,7 @@ func (rf *Raft) loadOption(o *Options) {
 	rf.heartbeatTimeout = o.ElectionTimeout
 	rf.applyInterval = o.ApplyInterval
 	rf.rpcTimeout = o.RPCTimeout
-	rf.maxlogEntryLength = o.MaxlogEntryLength
+	rf.maxlogEntryLength = o.MaxLogEntryLength
 }
 
 type RaftState struct {
