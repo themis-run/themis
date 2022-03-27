@@ -1,6 +1,11 @@
 package raft
 
-import "time"
+import (
+	"net"
+	"time"
+
+	"google.golang.org/grpc"
+)
 
 type Server interface {
 	Put([]byte) bool
@@ -16,13 +21,7 @@ type server struct {
 	stopch   chan struct{}
 }
 
-func New(opts ...Option) Server {
-	o := DefaultOptions()
-
-	for _, op := range opts {
-		op(o)
-	}
-
+func New(o *Options) Server {
 	applyCh := make(chan ApplyMsg, o.ApplyMsgLength)
 	persister := MakePersister(o.NativeName, o.SnapshotPath)
 	r := NewRaft(persister, applyCh, o)
@@ -43,6 +42,8 @@ func (s *server) CommitChannel() <-chan []byte {
 }
 
 func (s *server) Run() {
+	go s.StartRaftServer()
+
 	peers := make(map[string]RaftClient)
 	for k, v := range s.option.RaftPeers {
 		c, err := newClient(v)
@@ -56,6 +57,19 @@ func (s *server) Run() {
 	go s.listenApplyMsg()
 
 	s.raft.Start(peers)
+}
+
+func (s *server) StartRaftServer() {
+	lis, err := net.Listen("tcp", s.option.Address)
+	if err != nil {
+		panic(err)
+	}
+
+	srv := grpc.NewServer()
+	RegisterRaftServer(srv, s.raft)
+	if err := srv.Serve(lis); err != nil {
+		panic(err)
+	}
 }
 
 func (s *server) Put(commend []byte) bool {
