@@ -33,7 +33,6 @@ func Create(path string) Config {
 	config.loadYaml(path)
 
 	config.Raft.NativeName = config.Name
-	config.Raft.Address = config.Address
 
 	return *config
 }

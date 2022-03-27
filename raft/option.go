@@ -8,7 +8,7 @@ import (
 
 type Options struct {
 	NativeName        string
-	Address           string
+	Address           string            `yaml:"address"`
 	CodecType         string            `yaml:"codec_type"`
 	ApplyMsgLength    int               `yaml:"apply_msg_length"`
 	SnapshotPath      string            `yaml:"snapshot_path"`
