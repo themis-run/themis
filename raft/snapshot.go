@@ -63,14 +63,14 @@ func (rf *Raft) doInstallSnapshot(peerName string, req *InstallSnapshotRequest, 
 	return err
 }
 
-func (rf *Raft) sendInstallSnapshot(peerName string) {
+func (rf *Raft) sendInstallSnapshot(peerName string, lastLength int32) {
 	rf.mu.Lock()
 	req := &InstallSnapshotRequest{
 		Term:              rf.term,
 		LeaderName:        rf.me,
 		LastIncludedIndex: rf.lastSnapshotIndex,
 		LastIncludedTerm:  rf.lastSnapshotTerm,
-		Data:              rf.persister.ReadSnapshot(),
+		Data:              rf.persister.ReadSnapshotByLastLength(lastLength),
 	}
 	rf.mu.Unlock()
 

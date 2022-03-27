@@ -50,7 +50,7 @@ message InstallSnapshotRequest{
     string LeaderName = 2;
     int32 LastIncludedIndex = 3;
     int32 LastIncludedTerm = 4;
-    bytes Data = 5;
+    repeated bytes Data = 5;
     RaftBase Base = 6;
 }
 

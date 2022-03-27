@@ -158,7 +158,7 @@ func (rf *Raft) processAppendLogsReply(peerName string, req *AppendEntriesReques
 		return true
 	}
 
-	go rf.sendInstallSnapshot(peerName)
+	go rf.sendInstallSnapshot(peerName, rf.lastSnapshotIndex-reply.NextIndex+1)
 
 	return false
 }
