@@ -9,6 +9,7 @@ import (
 
 	"go.themis.run/themis/codec"
 	"go.themis.run/themis/logging"
+	"google.golang.org/protobuf/proto"
 )
 
 func init() {
@@ -143,6 +144,23 @@ func (rf *Raft) persist() {
 	rf.persister.SaveRaftState(data)
 }
 
+func (rf *Raft) ReadSnapshotToLogEntryByLastLength(lastLength int32) []*LogEntry {
+	logEntries := make([]*LogEntry, 0)
+
+	res := rf.persister.ReadSnapshotByLastLength(lastLength)
+	for _, v := range res {
+		entry := &LogEntry{}
+		if err := proto.Unmarshal(v, entry); err != nil {
+			logging.Error(err)
+			return nil
+		}
+
+		logEntries = append(logEntries, entry)
+	}
+
+	return logEntries
+}
+
 func (rf *Raft) readPersist(data []byte) {
 	if data == nil || len(data) < 1 {
 		rf.loadRaftState(rf.getRaftBootstrapState())
@@ -259,7 +277,7 @@ func (rf *Raft) startApplyLogs() {
 		msgs = append(msgs, ApplyMsg{
 			CommandValid: false,
 			Command:      []byte(InstallSnapshotToStore),
-			CommandIndex: rf.lastSnapshotIndex,
+			CommandIndex: rf.lastSnapshotIndex - rf.lastApplied,
 		})
 	} else if rf.commitIndex <= rf.lastApplied {
 		msgs = make([]ApplyMsg, 0)

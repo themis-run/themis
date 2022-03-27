@@ -1,5 +1,7 @@
 package raft
 
+import "time"
+
 type Server interface {
 	Put([]byte) bool
 	CommitChannel() <-chan []byte
@@ -80,7 +82,14 @@ func (s *server) listenApplyMsg() {
 			switch string(msg.Command) {
 			// raft log read to store, read all snapshot transfor command
 			case InstallSnapshotToStore:
+				logEntries := s.raft.ReadSnapshotToLogEntryByLastLength(msg.CommandIndex)
+				for i, v := range logEntries {
+					if i%s.option.ApplyMsgLength == 0 {
+						time.Sleep(10 * time.Millisecond)
+					}
 
+					s.commitCh <- v.Command
+				}
 			case AddMemeberToRaft:
 
 			}
