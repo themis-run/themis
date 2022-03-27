@@ -59,6 +59,8 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 			rf.commitIndex = req.LeaderCommit
 			rf.notifyApplyCh <- struct{}{}
 		}
+
+		rf.leader = req.LeaderName
 	}
 
 	rf.persist()

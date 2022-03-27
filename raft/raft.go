@@ -33,6 +33,7 @@ type ApplyMsg struct {
 type Raft struct {
 	mu        sync.RWMutex
 	me        string
+	leader    string
 	peers     map[string]RaftClient
 	persister *Persister
 	dead      int32
@@ -64,6 +65,18 @@ type Raft struct {
 	coder             codec.Codec
 
 	UnimplementedRaftServer
+}
+
+type RaftInfo struct {
+	Name   string
+	Leader string
+}
+
+func (rf *Raft) Info() RaftInfo {
+	return RaftInfo{
+		Name:   rf.me,
+		Leader: rf.leader,
+	}
 }
 
 func (rf *Raft) loadOption(o *Options) {
@@ -194,6 +207,7 @@ func (rf *Raft) changeRole(role Role) {
 			rf.nextIndex[k] = lastLogIndex + 1
 		}
 
+		rf.leader = rf.me
 		rf.matchIndex = make(map[string]int32)
 		rf.matchIndex[rf.me] = lastLogIndex
 		rf.resetElectionTimer()
