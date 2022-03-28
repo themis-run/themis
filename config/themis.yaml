@@ -1,6 +1,0 @@
-name: test
-address: localhost:8080
-raft:
-  peers:
-    sss: localhost:23213
-    rrr: localhost:23214

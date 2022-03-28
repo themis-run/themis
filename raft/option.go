@@ -8,16 +8,16 @@ import (
 
 type Options struct {
 	NativeName        string
-	Address           string            `yaml:"address"`
-	CodecType         string            `yaml:"codec_type"`
-	ApplyMsgLength    int               `yaml:"apply_msg_length"`
-	SnapshotPath      string            `yaml:"snapshot_path"`
-	MaxLogEntryLength int               `yaml:"max_log_entry_length"`
-	ElectionTimeout   time.Duration     `yaml:"election_timeout"`
-	HeartBeatTimeout  time.Duration     `yaml:"heartbeat_timeout"`
-	ApplyInterval     time.Duration     `yaml:"apply_interval"`
-	RPCTimeout        time.Duration     `yaml:"rpc_timeout"`
-	RaftPeers         map[string]string `yaml:"peers"`
+	Address           string        `yaml:"address"`
+	CodecType         string        `yaml:"codec_type"`
+	ApplyMsgLength    int           `yaml:"apply_msg_length"`
+	SnapshotPath      string        `yaml:"snapshot_path"`
+	MaxLogEntryLength int           `yaml:"max_log_entry_length"`
+	ElectionTimeout   time.Duration `yaml:"election_timeout"`
+	HeartBeatTimeout  time.Duration `yaml:"heartbeat_timeout"`
+	ApplyInterval     time.Duration `yaml:"apply_interval"`
+	RPCTimeout        time.Duration `yaml:"rpc_timeout"`
+	RaftPeers         map[string]string
 }
 
 func DefaultOptions() *Options {
