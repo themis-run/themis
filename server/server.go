@@ -33,6 +33,8 @@ type NodeInfo struct {
 	LeaderName    string
 	LeaderAddress string
 
+	Peers map[string]config.Address
+
 	role raft.Role
 }
 

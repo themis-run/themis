@@ -14,16 +14,16 @@ import (
 var ErrorConfigFileNotExist = errors.New("config file not exist")
 
 type Config struct {
-	Name        string           `yaml:"name"`
-	Address     string           `yaml:"address"`
-	Path        string           `yaml:"path"`
-	Size        uint             `yaml:"size"`
-	Raft        *raft.Options    `yaml:"raft"`
-	Log         *logging.Options `yaml:"logging"`
-	PeerAddress map[string]Addr  `yaml:"peers"`
+	Name        string             `yaml:"name"`
+	Address     string             `yaml:"address"`
+	Path        string             `yaml:"path"`
+	Size        uint               `yaml:"size"`
+	Raft        *raft.Options      `yaml:"raft"`
+	Log         *logging.Options   `yaml:"logging"`
+	PeerAddress map[string]Address `yaml:"peers"`
 }
 
-type Addr struct {
+type Address struct {
 	RaftAddress   string `yaml:"cluster_address"`
 	ListenAddress string `yaml:"listen_address"`
 }
