@@ -186,7 +186,43 @@ func (s *Server) Delete(ctx context.Context, req *themis.DeleteRequest) (*themis
 }
 
 func (s *Server) WatchStream(req *themis.WatchRequest, tw themis.Themis_WatchStreamServer) error {
-	return nil
+	watcher := s.store.Watch(req.Key, req.Type.String(), false)
+
+	for {
+		select {
+		case <-s.stopch:
+			break
+		case event := <-watcher.EventChan():
+			reply := &themis.WatchResponse{
+				Header: &themis.Header{
+					MemberName:    s.info.Name,
+					MemberAddress: s.info.Address,
+					LeaderName:    s.info.LeaderName,
+					LeaderAddress: s.info.LeaderAddress,
+					Role:          string(s.info.role),
+					Success:       false,
+				},
+			}
+
+			reply.Kv = &themis.KV{
+				Key:        event.Node.Key,
+				Value:      event.Node.Value,
+				CreateTime: event.Node.CreateTime.UnixMilli(),
+				Ttl:        event.Node.TTL.Milliseconds(),
+			}
+
+			reply.PrevKv = &themis.KV{
+				Key:        event.OldNode.Key,
+				Value:      event.OldNode.Value,
+				CreateTime: event.OldNode.CreateTime.UnixMilli(),
+				Ttl:        event.OldNode.TTL.Milliseconds(),
+			}
+
+			if err := tw.Send(reply); err != nil {
+				return err
+			}
+		}
+	}
 }
 
 func (s *Server) Watch(ctx context.Context, req *themis.WatchRequest) (*themis.WatchResponse, error) {
