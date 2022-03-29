@@ -31,6 +31,7 @@ type NodeInfo struct {
 	Name        string
 	Address     string
 	RaftAddress string
+	Term        int32
 
 	LeaderName    string
 	LeaderAddress string // raft address
@@ -258,6 +259,7 @@ func (s *Server) listenInfo() {
 			s.info.role = info.Role
 			s.info.LeaderName = info.Leader
 			s.info.LeaderAddress = s.info.Peers[info.Leader].RaftAddress
+			s.info.Term = info.Term
 		}
 	}
 }

@@ -72,6 +72,7 @@ type RaftInfo struct {
 	Name   string
 	Leader string
 	Role   Role
+	Term   int32
 }
 
 func (rf *Raft) Info() *RaftInfo {
@@ -79,6 +80,7 @@ func (rf *Raft) Info() *RaftInfo {
 		Name:   rf.me,
 		Leader: rf.leader,
 		Role:   rf.role,
+		Term:   rf.term,
 	}
 }
 
