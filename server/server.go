@@ -23,6 +23,8 @@ type Server struct {
 	info *NodeInfo
 
 	stopch chan struct{}
+
+	infoch chan *raft.RaftInfo
 }
 
 type NodeInfo struct {
@@ -31,7 +33,7 @@ type NodeInfo struct {
 	RaftAddress string
 
 	LeaderName    string
-	LeaderAddress string
+	LeaderAddress string // raft address
 
 	Peers map[string]config.Address
 
@@ -43,6 +45,7 @@ func New(cfg config.Config) *Server {
 		Name:        cfg.Name,
 		Address:     cfg.Address,
 		RaftAddress: cfg.Raft.Address,
+		Peers:       cfg.PeerAddress,
 	}
 
 	logging.DefaultLogger = logging.New(cfg.Log)
@@ -52,6 +55,9 @@ func New(cfg config.Config) *Server {
 		panic(err)
 	}
 
+	infoch := make(chan *raft.RaftInfo, 1)
+	cfg.Raft.InfoCh = infoch
+
 	raft := raft.New(cfg.Raft)
 
 	return &Server{
@@ -59,11 +65,14 @@ func New(cfg config.Config) *Server {
 		raft:   raft,
 		info:   info,
 		stopch: make(chan struct{}),
+		infoch: infoch,
 	}
 }
 
 func (s *Server) Run() {
 	s.raft.Run()
+	go s.listenCommmit()
+	go s.listenInfo()
 
 	lis, err := net.Listen("tcp", s.info.Address)
 	if err != nil {
@@ -236,6 +245,19 @@ func (s *Server) listenCommmit() {
 			case themis.OperateType_Delete:
 				s.store.Delete(commend.Kv.Key)
 			}
+		}
+	}
+}
+
+func (s *Server) listenInfo() {
+	for {
+		select {
+		case <-s.stopch:
+			break
+		case info := <-s.infoch:
+			s.info.role = info.Role
+			s.info.LeaderName = info.Leader
+			s.info.LeaderAddress = s.info.Peers[info.Leader].RaftAddress
 		}
 	}
 }

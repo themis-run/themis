@@ -18,6 +18,7 @@ type Options struct {
 	ApplyInterval     time.Duration `yaml:"apply_interval"`
 	RPCTimeout        time.Duration `yaml:"rpc_timeout"`
 	RaftPeers         map[string]string
+	InfoCh            chan *RaftInfo
 }
 
 func DefaultOptions() *Options {

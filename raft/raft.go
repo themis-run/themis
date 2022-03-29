@@ -51,6 +51,7 @@ type Raft struct {
 	applyTimer          *time.Timer
 	notifyApplyCh       chan struct{}
 	stopCh              chan struct{}
+	infoCh              chan *RaftInfo
 
 	voteFor           string
 	logEntries        []*LogEntry
@@ -70,12 +71,14 @@ type Raft struct {
 type RaftInfo struct {
 	Name   string
 	Leader string
+	Role   Role
 }
 
-func (rf *Raft) Info() RaftInfo {
-	return RaftInfo{
+func (rf *Raft) Info() *RaftInfo {
+	return &RaftInfo{
 		Name:   rf.me,
 		Leader: rf.leader,
+		Role:   rf.role,
 	}
 }
 
@@ -86,6 +89,7 @@ func (rf *Raft) loadOption(o *Options) {
 	rf.applyInterval = o.ApplyInterval
 	rf.rpcTimeout = o.RPCTimeout
 	rf.maxlogEntryLength = o.MaxLogEntryLength
+	rf.infoCh = o.InfoCh
 }
 
 type RaftState struct {
@@ -192,7 +196,11 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 func (rf *Raft) changeRole(role Role) {
-	logging.Debugf("%s change role: %s -> %s\n", rf.me, rf.role, role)
+	if rf.role != role {
+		logging.Debugf("%s change role: %s -> %s\n", rf.me, rf.role, role)
+		rf.infoCh <- rf.Info()
+	}
+
 	rf.role = role
 	switch role {
 	case Follower:
