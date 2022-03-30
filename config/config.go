@@ -14,13 +14,14 @@ import (
 var ErrorConfigFileNotExist = errors.New("config file not exist")
 
 type Config struct {
-	Name        string             `yaml:"name"`
-	Address     string             `yaml:"address"`
-	Path        string             `yaml:"path"`
-	Size        uint               `yaml:"size"`
-	Raft        *raft.Options      `yaml:"raft"`
-	Log         *logging.Options   `yaml:"logging"`
-	PeerAddress map[string]Address `yaml:"peers"`
+	Name          string             `yaml:"name"`
+	Address       string             `yaml:"address"`
+	Path          string             `yaml:"path"`
+	Size          uint               `yaml:"size"`
+	Raft          *raft.Options      `yaml:"raft"`
+	Log           *logging.Options   `yaml:"logging"`
+	PeerAddress   map[string]Address `yaml:"peers"`
+	ServerAddress map[string]string
 }
 
 type Address struct {
@@ -46,12 +47,15 @@ func Create(path string) Config {
 
 func (c *Config) initRaftPeer() {
 	peers := make(map[string]string)
+	servers := make(map[string]string)
 
 	for k, v := range c.PeerAddress {
 		peers[k] = v.RaftAddress
+		servers[k] = v.ListenAddress
 	}
 
 	c.Raft.RaftPeers = peers
+	c.ServerAddress = servers
 }
 
 func pathExist(path string) bool {

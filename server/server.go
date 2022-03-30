@@ -28,25 +28,23 @@ type Server struct {
 }
 
 type NodeInfo struct {
-	Name        string
-	Address     string
-	RaftAddress string
-	Term        int32
+	Name    string
+	Address string
+	Term    int32
 
 	LeaderName    string
-	LeaderAddress string // raft address
+	LeaderAddress string
 
-	Peers map[string]config.Address
+	Peers map[string]string
 
 	role raft.Role
 }
 
 func New(cfg config.Config) *Server {
 	info := &NodeInfo{
-		Name:        cfg.Name,
-		Address:     cfg.Address,
-		RaftAddress: cfg.Raft.Address,
-		Peers:       cfg.PeerAddress,
+		Name:    cfg.Name,
+		Address: cfg.Address,
+		Peers:   cfg.ServerAddress,
 	}
 
 	logging.DefaultLogger = logging.New(cfg.Log)
@@ -90,20 +88,18 @@ func (s *Server) Run() {
 
 func (s *Server) Put(ctx context.Context, req *themis.PutRequest) (*themis.PutResponse, error) {
 	reply := &themis.PutResponse{
-		Header: &themis.Header{
-			MemberName:    s.info.Name,
-			MemberAddress: s.info.Address,
-			LeaderName:    s.info.LeaderName,
-			LeaderAddress: s.info.LeaderAddress,
-			Role:          string(s.info.role),
-			Success:       false,
-		},
+		Header: s.newHeader(),
 	}
 
 	select {
 	case <-ctx.Done():
 		return reply, ctx.Err()
 	default:
+	}
+
+	if s.info.role != raft.Leader {
+		reply.Header.Success = false
+		return reply, nil
 	}
 
 	commend := &themis.Command{
@@ -122,14 +118,7 @@ func (s *Server) Put(ctx context.Context, req *themis.PutRequest) (*themis.PutRe
 
 func (s *Server) Get(ctx context.Context, req *themis.GetRequest) (*themis.GetResponse, error) {
 	reply := &themis.GetResponse{
-		Header: &themis.Header{
-			MemberName:    s.info.Name,
-			MemberAddress: s.info.Address,
-			LeaderName:    s.info.LeaderName,
-			LeaderAddress: s.info.LeaderAddress,
-			Role:          string(s.info.role),
-			Success:       false,
-		},
+		Header: s.newHeader(),
 	}
 
 	select {
@@ -153,20 +142,18 @@ func (s *Server) Get(ctx context.Context, req *themis.GetRequest) (*themis.GetRe
 
 func (s *Server) Delete(ctx context.Context, req *themis.DeleteRequest) (*themis.DeleteResponse, error) {
 	reply := &themis.DeleteResponse{
-		Header: &themis.Header{
-			MemberName:    s.info.Name,
-			MemberAddress: s.info.Address,
-			LeaderName:    s.info.LeaderName,
-			LeaderAddress: s.info.LeaderAddress,
-			Role:          string(s.info.role),
-			Success:       false,
-		},
+		Header: s.newHeader(),
 	}
 
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
+	}
+
+	if s.info.role != raft.Leader {
+		reply.Header.Success = false
+		return reply, nil
 	}
 
 	commend := &themis.Command{
@@ -194,14 +181,7 @@ func (s *Server) WatchStream(req *themis.WatchRequest, tw themis.Themis_WatchStr
 			break
 		case event := <-watcher.EventChan():
 			reply := &themis.WatchResponse{
-				Header: &themis.Header{
-					MemberName:    s.info.Name,
-					MemberAddress: s.info.Address,
-					LeaderName:    s.info.LeaderName,
-					LeaderAddress: s.info.LeaderAddress,
-					Role:          string(s.info.role),
-					Success:       false,
-				},
+				Header: s.newHeader(),
 			}
 
 			reply.Kv = &themis.KV{
@@ -227,14 +207,7 @@ func (s *Server) WatchStream(req *themis.WatchRequest, tw themis.Themis_WatchStr
 
 func (s *Server) Watch(ctx context.Context, req *themis.WatchRequest) (*themis.WatchResponse, error) {
 	reply := &themis.WatchResponse{
-		Header: &themis.Header{
-			MemberName:    s.info.Name,
-			MemberAddress: s.info.Address,
-			LeaderName:    s.info.LeaderName,
-			LeaderAddress: s.info.LeaderAddress,
-			Role:          string(s.info.role),
-			Success:       false,
-		},
+		Header: s.newHeader(),
 	}
 
 	select {
@@ -294,8 +267,21 @@ func (s *Server) listenInfo() {
 		case info := <-s.infoch:
 			s.info.role = info.Role
 			s.info.LeaderName = info.Leader
-			s.info.LeaderAddress = s.info.Peers[info.Leader].RaftAddress
+			s.info.LeaderAddress = s.info.Peers[info.Leader]
 			s.info.Term = info.Term
 		}
+	}
+}
+
+func (s *Server) newHeader() *themis.Header {
+	return &themis.Header{
+		MemberName:    s.info.Name,
+		MemberAddress: s.info.Address,
+		Term:          s.info.Term,
+		LeaderName:    s.info.LeaderName,
+		LeaderAddress: s.info.LeaderAddress,
+		Role:          string(s.info.role),
+		Servers:       s.info.Peers,
+		Success:       false,
 	}
 }
