@@ -54,6 +54,7 @@ func (c *Config) initRaftPeer() {
 		servers[k] = v.ListenAddress
 	}
 
+	servers[c.Name] = c.Address
 	c.Raft.RaftPeers = peers
 	c.ServerAddress = servers
 }

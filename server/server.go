@@ -35,7 +35,7 @@ type NodeInfo struct {
 	LeaderName    string
 	LeaderAddress string
 
-	Peers map[string]string
+	Server map[string]string
 
 	role raft.Role
 }
@@ -44,7 +44,7 @@ func New(cfg config.Config) *Server {
 	info := &NodeInfo{
 		Name:    cfg.Name,
 		Address: cfg.Address,
-		Peers:   cfg.ServerAddress,
+		Server:  cfg.ServerAddress,
 	}
 
 	logging.DefaultLogger = logging.New(cfg.Log)
@@ -267,7 +267,7 @@ func (s *Server) listenInfo() {
 		case info := <-s.infoch:
 			s.info.role = info.Role
 			s.info.LeaderName = info.Leader
-			s.info.LeaderAddress = s.info.Peers[info.Leader]
+			s.info.LeaderAddress = s.info.Server[info.Leader]
 			s.info.Term = info.Term
 		}
 	}
@@ -281,7 +281,7 @@ func (s *Server) newHeader() *themis.Header {
 		LeaderName:    s.info.LeaderName,
 		LeaderAddress: s.info.LeaderAddress,
 		Role:          string(s.info.role),
-		Servers:       s.info.Peers,
+		Servers:       s.info.Server,
 		Success:       false,
 	}
 }
