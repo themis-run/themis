@@ -33,12 +33,19 @@ func (c *Client) Watch(key string, op OperateType, callback WatchCallback) error
 		Type: themis.OperateType(op),
 	}
 
-	resp, err := tclient.Watch(context.Background(), req)
-	if err != nil {
-		return err
-	}
+	go func() {
+		resp, err := tclient.Watch(context.Background(), req)
+		if err != nil {
+			logging.Error(err)
+			return
+		}
 
-	return callback(resp.PrevKv, resp.Kv, OperateType(resp.GetType()))
+		if err := callback(resp.PrevKv, resp.Kv, OperateType(resp.GetType())); err != nil {
+			logging.Error(err)
+		}
+	}()
+
+	return nil
 }
 
 func (c *Client) WatchStream(key string, op OperateType, callback WatchCallback) error {
@@ -57,19 +64,21 @@ func (c *Client) WatchStream(key string, op OperateType, callback WatchCallback)
 		return err
 	}
 
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			logging.Error(err)
-		}
+	go func() {
+		for {
+			resp, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				logging.Error(err)
+			}
 
-		if err := callback(resp.PrevKv, resp.Kv, OperateType(resp.GetType())); err != nil {
-			logging.Error(err)
+			if err := callback(resp.PrevKv, resp.Kv, OperateType(resp.GetType())); err != nil {
+				logging.Error(err)
+			}
 		}
-	}
+	}()
 
 	return nil
 }
