@@ -36,7 +36,7 @@ type loadbalancer struct {
 }
 
 func (l *loadbalancer) Get(leaderName string, servers map[string]string, isWrite bool) string {
-	if isWrite {
+	if isWrite && leaderName != "" {
 		return servers[leaderName]
 	}
 
