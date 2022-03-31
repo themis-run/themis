@@ -15,11 +15,12 @@ import (
 )
 
 type Client struct {
-	config   *Config
-	balancer loadbalance.LoadBalancer
-	info     *Info
+	config *Config
+	info   *Info
 
-	coder   codec.Codec
+	balancer loadbalance.LoadBalancer
+	coder    codec.Codec
+
 	clients map[string]themis.ThemisClient
 
 	sync.Mutex
@@ -33,8 +34,20 @@ type Info struct {
 
 func NewClient(config *Config) *Client {
 	balancer := loadbalance.New(config.LoadBalancerName)
+
+	servers := map[string]string{
+		config.ServerName: config.ServerAddress,
+	}
+	info := &Info{
+		Servers: servers,
+	}
+
+	coder := codec.Get(config.CodecType)
+
 	return &Client{
 		balancer: balancer,
+		info:     info,
+		coder:    coder,
 	}
 }
 

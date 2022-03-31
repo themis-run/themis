@@ -4,9 +4,8 @@ type Config struct {
 	ServerName    string
 	ServerAddress string
 
-	Servers map[string]string
-
 	LoadBalancerName string
+	CodecType        string
 
 	RetryNum int
 }

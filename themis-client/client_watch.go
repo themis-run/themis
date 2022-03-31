@@ -22,7 +22,7 @@ const (
 type WatchCallback func(preKV, kv *themis.KV, t OperateType) error
 
 func (c *Client) Watch(key string, op OperateType, callback WatchCallback) error {
-	addr := c.balancer.Get(c.info.LeaderName, c.config.Servers, false)
+	addr := c.balancer.Get(c.info.LeaderName, c.info.Servers, false)
 	tclient, err := c.newClient(addr)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (c *Client) Watch(key string, op OperateType, callback WatchCallback) error
 }
 
 func (c *Client) WatchStream(key string, op OperateType, callback WatchCallback) error {
-	addr := c.balancer.Get(c.info.LeaderName, c.config.Servers, false)
+	addr := c.balancer.Get(c.info.LeaderName, c.info.Servers, false)
 	tclient, err := c.newClient(addr)
 	if err != nil {
 		return err
