@@ -7,7 +7,7 @@ import (
 
 func init() {
 	rand.Seed(time.Now().Unix())
-	Register(defaultName, &loadbalancer{})
+	Register(DefaultName, &loadbalancer{})
 }
 
 type LoadBalancer interface {
@@ -15,7 +15,7 @@ type LoadBalancer interface {
 }
 
 var loadbalancerMap map[string]LoadBalancer
-var defaultName = "default"
+var DefaultName = "default"
 
 func New(name string) LoadBalancer {
 	if v, ok := loadbalancerMap[name]; ok {

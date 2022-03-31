@@ -2,6 +2,7 @@ package themisclient
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+var ErrorServerNameAddressNil = errors.New("server name or address nil")
 
 type Client struct {
 	config *Config
@@ -32,7 +35,11 @@ type Info struct {
 	Servers    map[string]string
 }
 
-func NewClient(config *Config) *Client {
+func NewClient(config *Config) (*Client, error) {
+	if config.ServerName == "" || config.ServerAddress == "" {
+		return nil, ErrorServerNameAddressNil
+	}
+
 	balancer := loadbalance.New(config.LoadBalancerName)
 
 	servers := map[string]string{
@@ -48,7 +55,7 @@ func NewClient(config *Config) *Client {
 		balancer: balancer,
 		info:     info,
 		coder:    coder,
-	}
+	}, nil
 }
 
 func (c *Client) Get(key string) (*themis.KV, error) {
