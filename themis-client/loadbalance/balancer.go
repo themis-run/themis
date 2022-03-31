@@ -3,12 +3,10 @@ package loadbalance
 import (
 	"math/rand"
 	"time"
-
-	themisclient "go.themis.run/themis/themis-client"
 )
 
 type LoadBalancer interface {
-	Get(themisclient.Info, bool) string
+	Get(string, map[string]string, bool) string
 }
 
 func New(name string) LoadBalancer {
@@ -18,20 +16,20 @@ func New(name string) LoadBalancer {
 type loadbalancer struct {
 }
 
-func (l *loadbalancer) Get(info themisclient.Info, isWrite bool) string {
+func (l *loadbalancer) Get(leaderName string, servers map[string]string, isWrite bool) string {
 	if isWrite {
-		return info.Servers[info.LeaderName]
+		return servers[leaderName]
 	}
 
 	rand.Seed(time.Now().Unix())
-	randomNum := rand.Intn(len(info.Servers))
+	randomNum := rand.Intn(len(servers))
 
-	for _, v := range info.Servers {
+	for _, v := range servers {
 		if randomNum == 0 {
 			return v
 		}
 		randomNum--
 	}
 
-	return info.Servers[info.LeaderName]
+	return servers[leaderName]
 }
