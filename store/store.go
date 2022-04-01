@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strings"
 	"time"
 )
 
@@ -10,6 +11,9 @@ type Store interface {
 	Delete(key string) *Event
 
 	Watch(key string, action Opreation, isStream bool) Watcher
+
+	ListAllNode() []*Node
+	ListNodeByPrefix(prefix string) []*Node
 }
 
 func New(path string, size uint) (Store, error) {
@@ -93,4 +97,21 @@ func (s *store) listenEvent() {
 
 func (s *store) Watch(key string, action Opreation, isStream bool) Watcher {
 	return s.watcherHub.newWatcher(key, action, isStream)
+}
+
+func (s *store) ListAllNode() []*Node {
+	return s.ListNodeByPrefix("")
+}
+
+func (s *store) ListNodeByPrefix(prefix string) []*Node {
+	itr := s.kv.Iter()
+	nodeList := make([]*Node, 0)
+
+	for v := range itr {
+		if strings.HasPrefix(v.Key, prefix) {
+			nodeList = append(nodeList, &v)
+		}
+	}
+
+	return nodeList
 }

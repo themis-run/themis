@@ -6,6 +6,7 @@ type KV interface {
 	Set(string, *Node) *Event
 	Get(string) (*Event, bool)
 	Delete(string) *Event
+	Iter() <-chan Node
 }
 
 func newKVStore(size uintptr) KV {
@@ -58,4 +59,24 @@ func (kv *kvstore) Delete(key string) *Event {
 	}
 
 	return event
+}
+
+func (kv *kvstore) Iter() <-chan Node {
+	itr := kv.m.Iter()
+	nodeList := make([]Node, 0)
+	ch := make(chan Node)
+
+	for keyValue := range itr {
+		n := keyValue.Value.(Node)
+		nodeList = append(nodeList, n)
+	}
+
+	go func() {
+		for _, v := range nodeList {
+			ch <- v
+		}
+		close(ch)
+	}()
+
+	return ch
 }
