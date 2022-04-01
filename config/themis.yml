@@ -1,0 +1,11 @@
+name: test
+address: localhost:8080
+raft:
+  address: localhost:9999
+peers:
+  asdf:
+    cluster_address: localhost:12343
+    listen_address: localhost:6789
+  wqe:
+    cluster_address: localhost:1234
+    listen_address: localhost:4324 

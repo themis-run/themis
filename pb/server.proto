@@ -21,12 +21,15 @@ message Header {
     string member_name = 1;
     string member_address = 2;
     string role = 3;
+    int32 term = 4;
 
-    string leader_name = 4;
-    string leader_address = 5;
+    string leader_name = 5;
+    string leader_address = 6;
+
+    map<string, string> servers = 7;
 
     // is success
-    bool success = 6;
+    bool success = 8;
 }
 
 message KV {
@@ -51,6 +54,15 @@ message GetRequest {
 message GetResponse {
     Header header = 1;
     KV kv = 2;
+}
+
+message SearchRequest {
+    string prefix_key = 1;
+}
+
+message SearchResponse {
+    Header header = 1;
+    repeated KV kv_list = 2;
 }
 
 message DeleteRequest {
@@ -79,6 +91,7 @@ service Themis {
     rpc Put (PutRequest) returns (PutResponse);
     rpc Get (GetRequest) returns (GetResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
+    rpc SearchByPrefix(SearchRequest) returns (SearchResponse);
     rpc WatchStream (WatchRequest) returns (stream WatchResponse);
     rpc Watch (WatchRequest) returns (WatchResponse);
 }

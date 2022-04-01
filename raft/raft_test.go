@@ -51,11 +51,11 @@ func newTestRaftClient(name string, peersConfig map[string]string) map[string]Ra
 }
 
 func newTestRaft(name string) *Raft {
-	applyCh := make(chan ApplyMsg, 10)
-	persister := MakePersister()
-
 	opt := DefaultOptions()
 	opt.NativeName = name
+
+	applyCh := make(chan ApplyMsg, 10)
+	persister := MakePersister(name, opt.SnapshotPath)
 
 	return NewRaft(persister, applyCh, opt)
 }
@@ -97,6 +97,7 @@ func TestAppendLog(t *testing.T) {
 	name := findLeader(raftmap)
 	if name == "" {
 		t.Fail()
+		return
 	}
 
 	logging.Info(name)
@@ -114,6 +115,7 @@ func TestAppendLog(t *testing.T) {
 		for i := 0; i < length; i++ {
 			res[k] = append(res[k], <-raftmap[k].applyCh)
 		}
+		logging.Info(raftmap[k].getRaftState())
 	}
 
 	for k := range res {

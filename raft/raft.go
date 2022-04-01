@@ -9,6 +9,7 @@ import (
 
 	"go.themis.run/themis/codec"
 	"go.themis.run/themis/logging"
+	"google.golang.org/protobuf/proto"
 )
 
 func init() {
@@ -32,6 +33,7 @@ type ApplyMsg struct {
 type Raft struct {
 	mu        sync.RWMutex
 	me        string
+	leader    string
 	peers     map[string]RaftClient
 	persister *Persister
 	dead      int32
@@ -49,9 +51,11 @@ type Raft struct {
 	applyTimer          *time.Timer
 	notifyApplyCh       chan struct{}
 	stopCh              chan struct{}
+	infoCh              chan *RaftInfo
 
 	voteFor           string
 	logEntries        []*LogEntry
+	maxlogEntryLength int
 	applyCh           chan ApplyMsg
 	commitIndex       int32
 	lastSnapshotIndex int32
@@ -64,12 +68,30 @@ type Raft struct {
 	UnimplementedRaftServer
 }
 
+type RaftInfo struct {
+	Name   string
+	Leader string
+	Role   Role
+	Term   int32
+}
+
+func (rf *Raft) Info() *RaftInfo {
+	return &RaftInfo{
+		Name:   rf.me,
+		Leader: rf.leader,
+		Role:   rf.role,
+		Term:   rf.term,
+	}
+}
+
 func (rf *Raft) loadOption(o *Options) {
 	rf.me = o.NativeName
 	rf.electionTimeout = o.ElectionTimeout
 	rf.heartbeatTimeout = o.ElectionTimeout
 	rf.applyInterval = o.ApplyInterval
 	rf.rpcTimeout = o.RPCTimeout
+	rf.maxlogEntryLength = o.MaxLogEntryLength
+	rf.infoCh = o.InfoCh
 }
 
 type RaftState struct {
@@ -122,6 +144,7 @@ func (rf *Raft) loadRaftState(r *RaftState) {
 	rf.lastSnapshotTerm = r.LastSnapshotTerm
 	if r.LogEntries != nil {
 		rf.logEntries = r.LogEntries
+		return
 	}
 	rf.logEntries = []*LogEntry{{
 		Term:    0,
@@ -143,6 +166,23 @@ func (rf *Raft) persist() {
 	rf.persister.SaveRaftState(data)
 }
 
+func (rf *Raft) ReadSnapshotToLogEntryByLastLength(lastLength int32) []*LogEntry {
+	logEntries := make([]*LogEntry, 0)
+
+	res := rf.persister.ReadSnapshotByLastLength(lastLength)
+	for _, v := range res {
+		entry := &LogEntry{}
+		if err := proto.Unmarshal(v, entry); err != nil {
+			logging.Error(err)
+			return nil
+		}
+
+		logEntries = append(logEntries, entry)
+	}
+
+	return logEntries
+}
+
 func (rf *Raft) readPersist(data []byte) {
 	if data == nil || len(data) < 1 {
 		rf.loadRaftState(rf.getRaftBootstrapState())
@@ -158,7 +198,11 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 func (rf *Raft) changeRole(role Role) {
-	logging.Debugf("%s change role: %s -> %s\n", rf.me, rf.role, role)
+	if rf.role != role {
+		logging.Debugf("%s change role: %s -> %s\n", rf.me, rf.role, role)
+		rf.infoCh <- rf.Info()
+	}
+
 	rf.role = role
 	switch role {
 	case Follower:
@@ -173,6 +217,7 @@ func (rf *Raft) changeRole(role Role) {
 			rf.nextIndex[k] = lastLogIndex + 1
 		}
 
+		rf.leader = rf.me
 		rf.matchIndex = make(map[string]int32)
 		rf.matchIndex[rf.me] = lastLogIndex
 		rf.resetElectionTimer()
@@ -238,14 +283,39 @@ func (rf *Raft) Put(command []byte) (int32, int32, bool) {
 		})
 		rf.matchIndex[rf.me] = index
 		rf.updateCommitIndex()
+		if len(rf.logEntries) > rf.maxlogEntryLength {
+			rf.saveLogEntryToSnapshot()
+		}
 		rf.persist()
 	}
 	rf.resetHeartBeatTimers()
 	return index, term, isLeader
 }
 
+func (rf *Raft) saveLogEntryToSnapshot() {
+	index := rf.getRealIdxByLogIndex(rf.commitIndex) + 1
+	logEntries := rf.logEntries[:index]
+
+	snapshot := make([][]byte, 0)
+	for _, v := range logEntries {
+		bytes, err := proto.Marshal(v)
+		if err != nil {
+			logging.Error(err)
+			return
+		}
+
+		snapshot = append(snapshot, bytes)
+	}
+	rf.persister.SaveSnapshot(snapshot)
+	rf.logEntries = rf.logEntries[index:]
+}
+
 func (rf *Raft) ApplyChan() <-chan ApplyMsg {
 	return rf.applyCh
+}
+
+func (rf *Raft) addAppliedNum(num int32) {
+	rf.lastApplied += num
 }
 
 func (rf *Raft) startApplyLogs() {
@@ -259,7 +329,7 @@ func (rf *Raft) startApplyLogs() {
 		msgs = append(msgs, ApplyMsg{
 			CommandValid: false,
 			Command:      []byte(InstallSnapshotToStore),
-			CommandIndex: rf.lastSnapshotIndex,
+			CommandIndex: rf.lastSnapshotIndex - rf.lastApplied,
 		})
 	} else if rf.commitIndex <= rf.lastApplied {
 		msgs = make([]ApplyMsg, 0)
@@ -354,7 +424,7 @@ func NewRaft(persister *Persister, applyCh chan ApplyMsg, opts *Options) *Raft {
 	rf.loadOption(opts)
 	rf.persister = persister
 	rf.applyCh = applyCh
-	rf.coder = codec.Get(codec.Gob)
+	rf.coder = codec.Get(codec.Json)
 
 	rf.stopCh = make(chan struct{})
 	rf.term = 0
@@ -362,6 +432,8 @@ func NewRaft(persister *Persister, applyCh chan ApplyMsg, opts *Options) *Raft {
 	rf.role = Follower
 	rf.logEntries = make([]*LogEntry, 1)
 	rf.readPersist(persister.ReadRaftState())
+	logging.Debugf("%s  raftstate:", rf.me)
+	logging.Debug(rf.getRaftState())
 
 	return rf
 }

@@ -1,5 +1,12 @@
 package raft
 
+import (
+	"net"
+	"time"
+
+	"google.golang.org/grpc"
+)
+
 type Server interface {
 	Put([]byte) bool
 	CommitChannel() <-chan []byte
@@ -14,15 +21,9 @@ type server struct {
 	stopch   chan struct{}
 }
 
-func New(opts ...Option) Server {
-	o := DefaultOptions()
-
-	for _, op := range opts {
-		op(o)
-	}
-
+func New(o *Options) Server {
 	applyCh := make(chan ApplyMsg, o.ApplyMsgLength)
-	persister := MakePersister()
+	persister := MakePersister(o.NativeName, o.SnapshotPath)
 	r := NewRaft(persister, applyCh, o)
 
 	commitCh := make(chan []byte, o.ApplyMsgLength)
@@ -41,6 +42,8 @@ func (s *server) CommitChannel() <-chan []byte {
 }
 
 func (s *server) Run() {
+	go s.StartRaftServer()
+
 	peers := make(map[string]RaftClient)
 	for k, v := range s.option.RaftPeers {
 		c, err := newClient(v)
@@ -54,6 +57,19 @@ func (s *server) Run() {
 	go s.listenApplyMsg()
 
 	s.raft.Start(peers)
+}
+
+func (s *server) StartRaftServer() {
+	lis, err := net.Listen("tcp", s.option.Address)
+	if err != nil {
+		panic(err)
+	}
+
+	srv := grpc.NewServer()
+	RegisterRaftServer(srv, s.raft)
+	if err := srv.Serve(lis); err != nil {
+		panic(err)
+	}
 }
 
 func (s *server) Put(commend []byte) bool {
@@ -80,7 +96,16 @@ func (s *server) listenApplyMsg() {
 			switch string(msg.Command) {
 			// raft log read to store, read all snapshot transfor command
 			case InstallSnapshotToStore:
+				logEntries := s.raft.ReadSnapshotToLogEntryByLastLength(msg.CommandIndex)
+				for i, v := range logEntries {
+					if i%s.option.ApplyMsgLength == 0 {
+						time.Sleep(10 * time.Millisecond)
+					}
 
+					s.commitCh <- v.Command
+				}
+
+				s.raft.addAppliedNum(msg.CommandIndex)
 			case AddMemeberToRaft:
 
 			}

@@ -23,7 +23,9 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 	}
 
 	rf.term = req.Term
-	rf.changeRole(Follower)
+	if rf.role != Follower {
+		rf.changeRole(Follower)
+	}
 	rf.resetElectionTimer()
 	_, lastLogIndex := rf.lastLogTermIndex()
 
@@ -57,6 +59,8 @@ func (rf *Raft) AppendEntries(ctx context.Context, req *AppendEntriesRequest) (r
 			rf.commitIndex = req.LeaderCommit
 			rf.notifyApplyCh <- struct{}{}
 		}
+
+		rf.leader = req.LeaderName
 	}
 
 	rf.persist()

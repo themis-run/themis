@@ -94,6 +94,7 @@ func (rf *Raft) startElection() {
 			if err != nil {
 				logging.Debugf("%s -> %s error: ", rf.me, name)
 				logging.Debug(err)
+				ticketsCh <- false
 				return
 			}
 
