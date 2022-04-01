@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package raft;
+option go_package = "go.themis.run/themis/raft";
+
+message RaftBase{
+    string To = 1;
+    string From = 2;
+}
+
+message VoteRequest {
+    int32 Term = 1;
+    string CandidateName = 2;
+    int32 LastLogIndex = 3;
+    int32 LastLogTerm = 4;
+    RaftBase Base = 5;
+}
+
+message VoteReply{
+    int32 Term = 1;
+    bool VoteGranted = 2;
+    RaftBase Base = 3;
+}
+
+message LogEntry{
+    int32 Term = 1;
+    int32 Index = 2;
+    bytes Command = 3;
+}
+
+message AppendEntriesRequest{
+    int32 Term = 1;
+    string LeaderName = 2;
+    int32 PrevLogIndex = 3;
+    int32 PrevLogTerm = 4;
+    repeated LogEntry Entries = 5;
+    int32 LeaderCommit = 6;
+    RaftBase Base = 7;
+}
+
+message AppendEntriesReply{
+    int32 Term = 1;
+    bool Success = 2;
+    int32 NextIndex = 3;
+    RaftBase Base = 4;
+}
+
+message InstallSnapshotRequest{
+    int32 Term = 1;
+    string LeaderName = 2;
+    int32 LastIncludedIndex = 3;
+    int32 LastIncludedTerm = 4;
+    repeated bytes Data = 5;
+    RaftBase Base = 6;
+}
+
+message InstallSnapshotReply{
+    int32 Term = 1;
+    RaftBase Base = 2;
+}
+
+service Raft{
+    rpc InstallSnapshot (InstallSnapshotRequest) returns (InstallSnapshotReply);
+    
+    rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesReply);
+
+    rpc Vote (VoteRequest) returns (VoteReply);
+}
+
