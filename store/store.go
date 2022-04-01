@@ -104,7 +104,7 @@ func (s *store) ListAllNode() []*Node {
 }
 
 func (s *store) ListNodeByPrefix(prefix string) []*Node {
-	itr := s.kv.Iter()
+	itr := s.kv.ListNodeByPreKey(prefix)
 	nodeList := make([]*Node, 0)
 
 	for v := range itr {
