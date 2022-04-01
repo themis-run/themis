@@ -237,6 +237,36 @@ func (s *Server) Watch(ctx context.Context, req *themis.WatchRequest) (*themis.W
 	return reply, nil
 }
 
+func (s *Server) SearchByPrefix(ctx context.Context, req *themis.SearchRequest) (*themis.SearchResponse, error) {
+	reply := &themis.SearchResponse{
+		Header: s.newHeader(),
+	}
+
+	select {
+	case <-ctx.Done():
+		return reply, ctx.Err()
+	default:
+	}
+
+	nodeList := s.store.ListNodeByPrefix(req.PrefixKey)
+	kvList := make([]*themis.KV, 0)
+
+	for _, node := range nodeList {
+		kv := &themis.KV{
+			Key:        node.Key,
+			Value:      node.Value,
+			CreateTime: node.CreateTime.UnixMilli(),
+			Ttl:        node.TTL.Milliseconds(),
+		}
+
+		kvList = append(kvList, kv)
+	}
+
+	reply.KvList = kvList
+
+	return reply, nil
+}
+
 func (s *Server) listenCommmit() {
 	for {
 		select {

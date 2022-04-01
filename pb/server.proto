@@ -56,6 +56,15 @@ message GetResponse {
     KV kv = 2;
 }
 
+message SearchRequest {
+    string prefix_key = 1;
+}
+
+message SearchResponse {
+    Header header = 1;
+    repeated KV kv_list = 2;
+}
+
 message DeleteRequest {
     string key = 1;
 }
@@ -82,6 +91,7 @@ service Themis {
     rpc Put (PutRequest) returns (PutResponse);
     rpc Get (GetRequest) returns (GetResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
+    rpc SearchByPrefix(SearchRequest) returns (SearchResponse);
     rpc WatchStream (WatchRequest) returns (stream WatchResponse);
     rpc Watch (WatchRequest) returns (WatchResponse);
 }
