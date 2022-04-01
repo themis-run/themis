@@ -10,6 +10,7 @@ type Instance struct {
 	ClusterName string
 	IP          string
 	Port        int
+	IsHealthy   bool
 	TTL         time.Duration
 	MetaData    []byte
 }
@@ -51,6 +52,29 @@ func (c *Client) RegisterInstanceWithHeartbeat(instance *Instance, heartbeatTime
 	return nil
 }
 
+func (c *Client) DiscoveryService(serviceName string) ([]*Instance, error) {
+	prefix := fmt.Sprintf("%s:%s", ServiceMark, serviceName)
+
+	kvList, err := c.SearchByPrefix(prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	instanceList := make([]*Instance, 0)
+	for _, kv := range kvList {
+		instance := &Instance{}
+		if err := c.coder.Decode(kv.Value, instance); err != nil {
+			return nil, err
+		}
+
+		instance.IsHealthy = getInstanceHealthy(kv.CreateTime, kv.Ttl)
+
+		instanceList = append(instanceList, instance)
+	}
+
+	return instanceList, nil
+}
+
 func (c *Client) Heartbeat(instance *Instance) error {
 	key := convertInstanceKey(instance.ServiceName, instance.ClusterName, instance.IP)
 	return c.SetWithExpireTime(key, instance, instance.TTL)
@@ -62,4 +86,9 @@ func convertInstanceKey(serviceName, clusterName, ip string) string {
 	}
 
 	return fmt.Sprintf("%s:%s:%s:%s", ServiceMark, serviceName, clusterName, ip)
+}
+
+func getInstanceHealthy(createTime, ttl int64) bool {
+	expiretime := time.UnixMilli(createTime + ttl)
+	return time.Now().Before(expiretime)
 }

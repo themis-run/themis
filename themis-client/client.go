@@ -3,6 +3,7 @@ package themisclient
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -77,6 +78,44 @@ func (c *Client) Get(key string) (*themis.KV, error) {
 	c.updateInfo(resp.GetHeader())
 
 	return resp.GetKv(), nil
+}
+
+func (c *Client) SearchByPrefix(prefix string) ([]*themis.KV, error) {
+	addr := c.balancer.Get(c.info.LeaderName, c.info.Servers, false)
+	tclient, err := c.newClient(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &themis.SearchRequest{
+		PrefixKey: prefix,
+	}
+
+	resp, err := tclient.SearchByPrefix(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	c.updateInfo(resp.GetHeader())
+
+	return resp.GetKvList(), nil
+}
+
+func (c *Client) ListAllKV() ([]*themis.KV, error) {
+	kvList, err := c.SearchByPrefix("")
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*themis.KV, 0)
+	for _, v := range kvList {
+		if strings.HasPrefix(v.GetKey(), ServiceMark) {
+			continue
+		}
+		res = append(res, v)
+	}
+
+	return res, nil
 }
 
 func (c *Client) Delete(key string) error {
